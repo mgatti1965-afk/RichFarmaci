@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Center the custom generated 1:1 image strictly at 66dp within 108dp canvas -->
+    <item
+        android:width="66dp"
+        android:height="66dp"
+        android:drawable="@drawable/ic_richfarmaci_logo_asset"
+        android:gravity="center" />
+</layer-list>

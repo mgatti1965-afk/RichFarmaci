@@ -1,0 +1,6 @@
+{
+  "name": "RichFarmaci",
+  "description": "Richiesta periodica di farmaci al medico tramite WhatsApp o SMS, con pulsanti e testi grandi ideale per anziani.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
