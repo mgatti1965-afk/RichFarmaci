@@ -3,6 +3,7 @@ package com.example
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.example.ui.screens.MainScreen
+import com.example.ui.viewmodel.MainViewModel
 import com.example.ui.theme.RichFarmaciTheme
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -23,9 +24,10 @@ class GreetingScreenshotTest {
   @Test
   fun greeting_screenshot() {
     val application = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+    val viewModel = MainViewModel(application)
     composeTestRule.setContent {
       RichFarmaciTheme {
-        MainScreen(activityApplication = application)
+        MainScreen(viewModel = viewModel)
       }
     }
 

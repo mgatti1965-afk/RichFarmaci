@@ -21,4 +21,7 @@ interface SentRequestDao {
 
     @Query("DELETE FROM sent_requests WHERE id = :id")
     suspend fun deleteById(id: String)
+
+    @Query("DELETE FROM sent_requests")
+    suspend fun clearAll()
 }

@@ -13,6 +13,7 @@ class PatientSettingsManager(context: Context) {
             pazienteCf = prefs.getString("paziente_cf", "")?.uppercase() ?: "",
             medicoNome = prefs.getString("medico_nome", "") ?: "",
             medicoTelefono = prefs.getString("medico_telefono", "") ?: "",
+            medicoEmail = prefs.getString("medico_email", "") ?: "",
             secondoIndirizzo = prefs.getString("secondo_indirizzo", "") ?: "",
             messaggioTesta = prefs.getString(
                 "messaggio_testa",
@@ -22,7 +23,7 @@ class PatientSettingsManager(context: Context) {
                 "messaggio_coda",
                 "La ringrazio per la disponibilità. Cordiali saluti."
             ) ?: "La ringrazio per la disponibilità. Cordiali saluti.",
-            tipoInvio = prefs.getBoolean("tipo_invio", true)
+            tipoInvio = prefs.getInt("tipo_invio_int", 0) // Default to 0 (WhatsApp)
         )
     }
 
@@ -35,19 +36,26 @@ class PatientSettingsManager(context: Context) {
             // Clean phone numbers from spaces or weird chars
             val cleanPhone = settings.medicoTelefono.replace("\\s".toRegex(), "").replace("[^+0-9]".toRegex(), "")
             putString("medico_telefono", cleanPhone)
+            putString("medico_email", settings.medicoEmail.trim())
             putString("secondo_indirizzo", settings.secondoIndirizzo.trim())
             putString("messaggio_testa", settings.messaggioTesta.trim())
             putString("messaggio_coda", settings.messaggioCoda.trim())
-            putBoolean("tipo_invio", settings.tipoInvio)
+            putInt("tipo_invio_int", settings.tipoInvio)
             apply()
         }
     }
 
     fun isConfigured(): Boolean {
         val settings = getSettings()
+        val hasContact = if (settings.tipoInvio == 2) {
+            settings.medicoEmail.isNotBlank()
+        } else {
+            settings.medicoTelefono.isNotBlank()
+        }
+        
         return settings.pazienteNome.isNotBlank() && 
                settings.pazienteCf.isNotBlank() && 
                settings.medicoNome.isNotBlank() &&
-               settings.medicoTelefono.isNotBlank()
+               hasContact
     }
 }

@@ -18,4 +18,8 @@ class SentRequestRepository(private val sentRequestDao: SentRequestDao) {
     suspend fun deleteById(id: String) {
         sentRequestDao.deleteById(id)
     }
+
+    suspend fun clearAll() {
+        sentRequestDao.clearAll()
+    }
 }

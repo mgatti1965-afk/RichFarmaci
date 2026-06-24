@@ -60,13 +60,15 @@ data class SentRequest(
     }
 }
 
+// tipoInvio: 0 = WhatsApp, 1 = SMS, 2 = Email
 data class PatientSettings(
     val pazienteNome: String = "",
     val pazienteCf: String = "",
     val medicoNome: String = "",
     val medicoTelefono: String = "",
+    val medicoEmail: String = "",
     val secondoIndirizzo: String = "",
     val messaggioTesta: String = "Gentile Dottore, Le chiedo cortesemente la prescrizione dei seguenti medicinali intestati a me:",
     val messaggioCoda: String = "La ringrazio per la disponibilità. Cordiali saluti.",
-    val tipoInvio: Boolean = true // true = WhatsApp, false = SMS
+    val tipoInvio: Int = 0
 )

@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.ContactsContract
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -55,1060 +56,165 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.model.Medication
 import com.example.data.model.PatientSettings
-import com.example.data.model.SentMedication
-import com.example.data.model.SentRequest
-import com.example.ui.theme.*
 import com.example.ui.viewmodel.MainViewModel
-import com.example.ui.viewmodel.MainViewModelFactory
 
-@OptIn(ExperimentalMaterial3Api::class)
+// Simple Slate-based colors for UI consistency
+val GreenPrimary = Color(0xFF16A34A)
+val GreenLightBg = Color(0xFFF0FDF4)
+val Slate900 = Color(0xFF0F172A)
+val Slate600 = Color(0xFF475569)
+val GrayBackground = Color(0xFFF8FAFC)
+val GrayBorder = Color(0xFFE2E8F0)
+val White = Color.White
+
 @Composable
-fun MainScreen(activityApplication: Application) {
+fun MainScreen(viewModel: MainViewModel) {
     val context = LocalContext.current
-    val viewModel: MainViewModel = viewModel(
-        factory = MainViewModelFactory(activityApplication)
-    )
+    val settings by viewModel.settings.collectAsState()
+    val medications by viewModel.medications.collectAsState()
+    val selectedIds by viewModel.selectedMedicationIds.collectAsState()
+    val selectedQuantities by viewModel.selectedQuantities.collectAsState()
+    var showSettings by remember { mutableStateOf(false) }
 
-    val currentTab by viewModel.currentTab.collectAsStateWithLifecycle()
-    val showSettings by viewModel.showSettings.collectAsStateWithLifecycle()
-    val isConfigured by viewModel.isConfigured.collectAsStateWithLifecycle()
-    val settings by viewModel.settings.collectAsStateWithLifecycle()
-    val medications by viewModel.medications.collectAsStateWithLifecycle()
-    val sentRequests by viewModel.sentRequests.collectAsStateWithLifecycle()
-
-    val selectedIds by viewModel.selectedMedicationIds.collectAsStateWithLifecycle()
-    val selectedQuants by viewModel.selectedQuantities.collectAsStateWithLifecycle()
-    val selectedNotes by viewModel.selectedNotes.collectAsStateWithLifecycle()
-
-    var showSendModal by remember { mutableStateOf(false) }
-    var modalMessageText by remember { mutableStateOf("") }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        PharmacyCross(
-                            modifier = Modifier.size(26.dp),
-                            color = GreenPrimary
-                        )
-                        Text(
-                            text = "RichFarmaci",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 24.sp,
-                            color = Slate900
-                        )
-                    }
-                },
-                actions = {
-                    SettingsButtonWithAlert(
-                        isConfigured = isConfigured,
-                        onClick = { viewModel.setShowSettings(true) }
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = White,
-                    titleContentColor = Slate900
-                ),
-                modifier = Modifier.shadowUnderline()
-            )
-        },
-        bottomBar = {
-            if (!showSettings) {
-                BottomNavigationBar(
-                    currentTab = currentTab,
-                    onTabSelected = { viewModel.selectTab(it) }
-                )
-            }
-        },
-        containerColor = GrayBackground
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            if (showSettings) {
-                // Settings Screen Panel as full screen depth overlay
-                SettingsPanelContent(
-                    settings = settings,
-                    medications = medications,
-                    viewModel = viewModel,
-                    onClose = { viewModel.setShowSettings(false) }
-                )
-            } else {
-                when (currentTab) {
-                    0 -> RequestTabContent(
-                        isConfigured = isConfigured,
-                        medications = medications,
-                        selectedIds = selectedIds,
-                        selectedQuants = selectedQuants,
-                        selectedNotes = selectedNotes,
-                        viewModel = viewModel,
-                        onOpenSettings = { viewModel.setShowSettings(true) },
-                        onPrepareRequest = {
-                            modalMessageText = viewModel.buildFormattedMessage()
-                            showSendModal = true
-                        }
-                    )
-                    1 -> HistoryTabContent(
-                        sentRequests = sentRequests,
-                        viewModel = viewModel
-                    )
-                }
-            }
-        }
-    }
-
-    // Message Preview Modal Dialog
-    if (showSendModal) {
-        Dialog(
-            onDismissRequest = { showSendModal = false },
-            properties = DialogProperties(usePlatformDefaultWidth = false)
-        ) {
-            Surface(
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = GrayBackground
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.92f)
+                    .fillMaxSize()
                     .padding(16.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .border(2.dp, GreenPrimary, RoundedCornerShape(24.dp)),
-                color = White
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(20.dp)
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Header
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Anteprima Richiesta",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp,
-                            color = Slate900
-                        )
-                        IconButton(onClick = { showSendModal = false }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Chiudi",
-                                tint = Slate600,
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
-                    }
-
-                    Divider(
-                        modifier = Modifier.padding(vertical = 12.dp),
-                        color = GrayBorder
-                    )
-
-                    // Verbatim message body
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .background(GrayBackground, RoundedCornerShape(12.dp))
-                            .border(1.dp, GrayBorder, RoundedCornerShape(12.dp))
-                            .padding(14.dp)
-                    ) {
-                        LazyColumn(modifier = Modifier.fillMaxSize()) {
-                            item {
-                                Text(
-                                    text = modalMessageText,
-                                    fontSize = 18.sp,
-                                    lineHeight = 24.sp,
-                                    color = Slate900,
-                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Default
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Button based on configuration
-                    Button(
-                        onClick = {
-                            val tel = settings.medicoTelefono
-                            if (settings.tipoInvio) {
-                                // WhatsApp Direct Option
-                                val escapedMsg = Uri.encode(modalMessageText)
-                                val waUri = if (tel.isNotBlank()) {
-                                    Uri.parse("https://api.whatsapp.com/send?phone=$tel&text=$escapedMsg")
-                                } else {
-                                    Uri.parse("https://api.whatsapp.com/send?text=$escapedMsg")
-                                }
-                                val intent = Intent(Intent.ACTION_VIEW, waUri)
-                                try {
-                                    context.startActivity(intent)
-                                    viewModel.recordSentRequest(modalMessageText)
-                                    showSendModal = false
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "WhatsApp non disponibile.", Toast.LENGTH_LONG).show()
-                                }
-                            } else {
-                                // SMS Direct Option
-                                val smsUri = Uri.parse("smsto:$tel")
-                                val intent = Intent(Intent.ACTION_SENDTO, smsUri).apply {
-                                    putExtra("sms_body", modalMessageText)
-                                }
-                                try {
-                                    context.startActivity(intent)
-                                    viewModel.recordSentRequest(modalMessageText)
-                                    showSendModal = false
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "Impossibile aprire SMS.", Toast.LENGTH_LONG).show()
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(64.dp)
-                            .testTag("send_button"),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (settings.tipoInvio) GreenPrimary else Slate900
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Text(
-                            text = if (settings.tipoInvio) "Invia via WhatsApp" else "Invia via SMS",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = White
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(6.dp))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SettingsButtonWithAlert(isConfigured: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .padding(end = 6.dp)
-            .testTag("settings_button_container")
-    ) {
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier
-                .size(56.dp)
-                .background(GrayBackground, CircleShape)
-                .testTag("settings_button")
-        ) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Configurazione",
-                tint = Slate900,
-                modifier = Modifier.size(32.dp)
-            )
-        }
-
-        if (!isConfigured) {
-            val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-            val alphaAnim by infiniteTransition.animateFloat(
-                initialValue = 0.3f,
-                targetValue = 1.0f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(1000, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "pulse_alpha"
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .align(Alignment.TopEnd)
-                    .alpha(alphaAnim)
-                    .background(OrangeAlert, CircleShape)
-                    .border(2.dp, White, CircleShape)
-                    .testTag("orange_pulse_dot")
-            )
-        }
-    }
-}
-
-@Composable
-fun BottomNavigationBar(currentTab: Int, onTabSelected: (Int) -> Unit) {
-    NavigationBar(
-        containerColor = White,
-        tonalElevation = 8.dp,
-        modifier = Modifier.height(84.dp)
-    ) {
-        NavigationBarItem(
-            selected = currentTab == 0,
-            onClick = { onTabSelected(0) },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.AddCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp)
-                )
-            },
-            label = {
-                Text(
-                    text = "1. Richiedi",
-                    fontSize = 16.sp,
-                    fontWeight = if (currentTab == 0) FontWeight.Bold else FontWeight.Medium
-                )
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = GreenPrimary,
-                selectedTextColor = GreenPrimary,
-                unselectedIconColor = Slate600,
-                unselectedTextColor = Slate600,
-                indicatorColor = GreenLightBg
-            )
-        )
-
-        NavigationBarItem(
-            selected = currentTab == 1,
-            onClick = { onTabSelected(1) },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.List,
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp)
-                )
-            },
-            label = {
-                Text(
-                    text = "2. Storico",
-                    fontSize = 16.sp,
-                    fontWeight = if (currentTab == 1) FontWeight.Bold else FontWeight.Medium
-                )
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = GreenPrimary,
-                selectedTextColor = GreenPrimary,
-                unselectedIconColor = Slate600,
-                unselectedTextColor = Slate600,
-                indicatorColor = GreenLightBg
-            )
-        )
-    }
-}
-
-// -----------------------------------------------------------------------------------------------
-// TAB 1: RICHIEDI (REQUEST FORM)
-// -----------------------------------------------------------------------------------------------
-@Composable
-fun RequestTabContent(
-    isConfigured: Boolean,
-    medications: List<Medication>,
-    selectedIds: Set<String>,
-    selectedQuants: Map<String, Int>,
-    selectedNotes: Map<String, String>,
-    viewModel: MainViewModel,
-    onOpenSettings: () -> Unit,
-    onPrepareRequest: () -> Unit
-) {
-    val activeMeds = medications.filter { !it.inPausa }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Visual banner repeating the pharmacy cross
-        Card(
-            colors = CardDefaults.cardColors(containerColor = White),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            border = BorderStroke(1.dp, GrayBorder)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(Color(0xFFECFDF5), RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    PharmacyCross(
-                        modifier = Modifier.size(24.dp),
-                        color = GreenPrimary
-                    )
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
+                    PharmacyCross(modifier = Modifier.size(40.dp))
                     Text(
-                        text = "Richiedi i Miei Farmaci",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Slate900
-                    )
-                    Text(
-                        text = "Genera messaggi pronti per il tuo medico",
-                        fontSize = 14.sp,
-                        color = Slate600
-                    )
-                }
-            }
-        }
-        if (!isConfigured) {
-            // Highly apparent warning Banner inviting user to setup
-            Card(
-                colors = CardDefaults.cardColors(containerColor = SandAlertBg),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .border(2.dp, OrangeAlert, RoundedCornerShape(16.dp)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = OrangeAlert,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = "Configurazione incompleta!",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Slate900,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Devi prima configurare il tuo Nome, Codice Fiscale, il nome e il cellulare del Medico per preparare le richieste.",
-                        fontSize = 16.sp,
-                        color = Slate600,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 22.sp
-                    )
-                    Spacer(modifier = Modifier.height(14.dp))
-                    Button(
-                        onClick = onOpenSettings,
-                        colors = ButtonDefaults.buttonColors(containerColor = OrangeAlert),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(54.dp)
-                    ) {
-                        Text("Configura Ora ⚙️", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = White)
-                    }
-                }
-            }
-        }
-
-        // Informative guidance
-        Text(
-            text = "Seleziona i farmaci che ti servono oggi:",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Slate900,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-
-        if (activeMeds.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    PharmacyCross(
-                        modifier = Modifier.size(64.dp),
-                        color = GreenPrimary.copy(alpha = 0.6f)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Nessun farmaco attivo in rubrica.",
-                        fontSize = 18.sp,
+                        text = "Richiesta Farmaci",
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Slate900
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Aggiungi medicinali premendo in alto su Configura ⚙️",
-                        fontSize = 16.sp,
-                        color = Slate600,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(activeMeds) { med ->
-                    val isSelected = selectedIds.contains(med.id)
-                    val customQty = selectedQuants[med.id] ?: med.scatole
-                    val customNote = selectedNotes[med.id] ?: ""
-
-                    ActiveMedicationSelectionCard(
-                        med = med,
-                        isSelected = isSelected,
-                        qty = customQty,
-                        tempNote = customNote,
-                        onToggle = { viewModel.toggleMedicationSelection(med) },
-                        onQtyChange = { viewModel.setQuantityForMedication(med.id, it) },
-                        onNoteChange = { viewModel.setNoteForMedication(med.id, it) }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Large Send Request trigger button
-        val canPrepare = isConfigured && selectedIds.isNotEmpty()
-        Button(
-            onClick = { if (canPrepare) onPrepareRequest() },
-            enabled = canPrepare,
-            shape = RoundedCornerShape(20.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = GreenPrimary,
-                disabledContainerColor = GrayBorder
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(68.dp)
-                .testTag("prepare_request_button")
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp),
-                    tint = if (canPrepare) White else Slate600
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = if (selectedIds.isEmpty()) "SELEZIONA FARMACI" else "PREPARA RICHIESTA (${selectedIds.size})",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (canPrepare) White else Slate600
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun ActiveMedicationSelectionCard(
-    med: Medication,
-    isSelected: Boolean,
-    qty: Int,
-    tempNote: String,
-    onToggle: () -> Unit,
-    onQtyChange: (Int) -> Unit,
-    onNoteChange: (String) -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) GreenLightBg else White
-        ),
-        border = BorderStroke(
-            width = if (isSelected) 3.dp else 1.8.dp,
-            color = if (isSelected) GreenPrimary else GrayBorder
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onToggle() }
-            .testTag("medication_card_${med.id}")
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Large visual state checkbox or pill
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(
-                            if (isSelected) GreenPrimary else Color.Transparent,
-                            CircleShape
-                        )
-                        .border(2.5.dp, if (isSelected) GreenPrimary else Slate600, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isSelected) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Selezionato",
-                            tint = White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = med.nome,
-                        fontSize = 20.sp, // Elderly text sizing
-                        fontWeight = FontWeight.Bold,
-                        color = Slate900
-                    )
-                    if (med.note.isNotBlank()) {
-                        Text(
-                            text = med.note,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Slate600,
-                            modifier = Modifier.padding(top = 2.dp)
-                        )
-                    }
-                    Text(
-                        text = "Standard: ${med.scatole} ${if (med.scatole == 1) "confezione" else "confezioni"}",
-                        fontSize = 14.sp,
-                        color = Slate600,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
-            }
-
-            // Expanding controls on selection
-            AnimatedVisibility(
-                visible = isSelected,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(top = 14.dp)
-                        .fillMaxWidth()
-                        .clickable(enabled = false) {} // Prevent click propagating to card selection toggle
-                ) {
-                    Divider(color = GrayBorder, modifier = Modifier.padding(bottom = 12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    IconButton(
+                        onClick = { showSettings = true },
+                        modifier = Modifier
+                            .background(White, CircleShape)
+                            .border(1.dp, GrayBorder, CircleShape)
                     ) {
+                        Icon(Icons.Default.Settings, contentDescription = "Impostazioni", tint = Slate600)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Patient Info Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, GrayBorder)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Quante scatole vuoi?",
+                            text = "Paziente: ${settings.pazienteNome.ifBlank { "Non configurato" }}",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Slate900
                         )
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            // Decrement
-                            IconButton(
-                                onClick = { if (qty > 1) onQtyChange(qty - 1) },
-                                modifier = Modifier
-                                    .size(54.dp)
-                                    .background(Slate900, RoundedCornerShape(12.dp))
-                                    .testTag("qty_minus_button_${med.id}")
-                            ) {
-                                Text(
-                                    text = "−",
-                                    fontSize = 32.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = White,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.offset(y = (-2).dp)
-                                )
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .width(54.dp)
-                                    .height(54.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = qty.toString(),
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Slate900,
-                                    modifier = Modifier.testTag("qty_display_${med.id}")
-                                )
-                            }
-
-                            // Increment
-                            IconButton(
-                                onClick = { onQtyChange(qty + 1) },
-                                modifier = Modifier
-                                    .size(54.dp)
-                                    .background(GreenPrimary, RoundedCornerShape(12.dp))
-                                    .testTag("qty_plus_button_${med.id}")
-                            ) {
-                                Text(
-                                    text = "+",
-                                    fontSize = 32.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = White,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.offset(y = (-1).dp)
-                                )
-                            }
-                        }
+                        Text(
+                            text = "Medico: ${settings.medicoNome.ifBlank { "Non configurato" }}",
+                            fontSize = 14.sp,
+                            color = Slate600
+                        )
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // TextField transient/temporary notes
-                    OutlinedTextField(
-                        value = tempNote,
-                        onValueChange = onNoteChange,
-                        label = { Text("Note urgenti o temporanee (es: compresse mattina)", fontSize = 15.sp) },
-                        placeholder = { Text("es: solo mezza scatola, urgenze", fontSize = 14.sp) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("temp_note_input_${med.id}"),
-                        textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, color = Slate900),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = GreenPrimary,
-                            unfocusedBorderColor = GrayBorder
-                        ),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
-                    )
                 }
-            }
-        }
-    }
-}
 
-// -----------------------------------------------------------------------------------------------
-// TAB 2: STORICO / CRONOLOGIA (HISTORY)
-// -----------------------------------------------------------------------------------------------
-@Composable
-fun HistoryTabContent(
-    sentRequests: List<SentRequest>,
-    viewModel: MainViewModel
-) {
-    val context = LocalContext.current
+                Spacer(modifier = Modifier.height(24.dp))
 
-    if (sentRequests.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                    modifier = Modifier.size(72.dp),
-                    tint = Slate600
-                )
-                Spacer(modifier = Modifier.height(10.dp))
+                // Medication Grid
                 Text(
-                    text = "La cronologia è vuota.",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Slate900
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Qui vedrai l'elenco delle ricette richieste in passato.",
+                    text = "Seleziona i farmaci da richiedere:",
                     fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
                     color = Slate600,
-                    textAlign = TextAlign.Center
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
-            }
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "Cronologia Richieste Inviate:",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Slate900,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(sentRequests, key = { it.id }) { req ->
-                    HistoryItemRow(
-                        request = req,
-                        settings = viewModel.settings.value,
-                        onDelete = { viewModel.deleteHistoryItem(req) },
-                        onRepeatRequest = {
-                            val msgEncoded = Uri.encode(req.testoCompleto)
-                            val tel = viewModel.settings.value.medicoTelefono
-                            val tipoInvio = viewModel.settings.value.tipoInvio
-
-                            if (tipoInvio) {
-                                val waUri = if (tel.isNotBlank()) {
-                                    Uri.parse("https://api.whatsapp.com/send?phone=$tel&text=$msgEncoded")
-                                } else {
-                                    Uri.parse("https://api.whatsapp.com/send?text=$msgEncoded")
-                                }
-                                val intent = Intent(Intent.ACTION_VIEW, waUri)
-                                try {
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "WhatsApp non disponibile.", Toast.LENGTH_LONG).show()
-                                }
-                            } else {
-                                val smsUri = Uri.parse("smsto:$tel")
-                                val intent = Intent(Intent.ACTION_SENDTO, smsUri).apply {
-                                    putExtra("sms_body", req.testoCompleto)
-                                }
-                                try {
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "Impossibile aprire SMS.", Toast.LENGTH_LONG).show()
-                                }
-                            }
-                        }
-                    )
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(1),
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp)
+                ) {
+                    items(medications.filter { !it.inPausa }) { med ->
+                        val isSelected = selectedIds.contains(med.id)
+                        val quantity = selectedQuantities[med.id] ?: 0
+                        MedicationItem(
+                            med = med,
+                            isSelected = isSelected,
+                            requestedQuantity = quantity,
+                            onQuantityChange = { viewModel.updateSelection(med, it) }
+                        )
+                    }
                 }
             }
-        }
-    }
-}
 
-@Suppress("DEPRECATION")
-@Composable
-fun HistoryItemRow(
-    request: SentRequest,
-    settings: com.example.data.model.PatientSettings,
-    onDelete: () -> Unit,
-    onRepeatRequest: () -> Unit
-) {
-    val context = LocalContext.current
-    var expanded by remember { mutableStateOf(false) }
-
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = White),
-        border = BorderStroke(1.2.dp, GrayBorder),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { expanded = !expanded }
-            .testTag("history_item_${request.id}")
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Summary row
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+            // Bottom Send Action
+            val selectedCount = selectedIds.size
+            AnimatedVisibility(
+                visible = selectedCount > 0,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
             ) {
-                // DateTime label
-                Box(
+                Button(
+                    onClick = {
+                        val intent = viewModel.generateRequestIntent(context)
+                        if (intent != null) {
+                            context.startActivity(intent)
+                        }
+                    },
                     modifier = Modifier
-                        .background(Slate900, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                        .fillMaxWidth()
+                        .height(64.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = White)
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = request.data,
-                        fontSize = 13.sp,
+                        text = "INVIA RICHIESTA ($selectedCount)",
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = White
                     )
                 }
-
-                // Delete Button
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier
-                        .size(44.dp)
-                        .background(Color(0xFFFEE2E2), CircleShape)
-                        .testTag("delete_history_item_${request.id}")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Elimina",
-                        tint = Color.Red,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = "Inviata a: Dott. ${request.medicoNome}",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Slate900
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Wrapped medications list of chips
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                val list = request.getSentMedications()
-                val displayCount = 2
-                val itemsToDisplay = list.take(displayCount)
-
-                FlowRow(
-                    mainAxisSpacing = 6.dp,
-                    crossAxisSpacing = 6.dp
-                ) {
-                    itemsToDisplay.forEach { med ->
-                        Box(
-                            modifier = Modifier
-                                .background(GreenLightBg, RoundedCornerShape(10.dp))
-                                .border(1.dp, GreenPrimary, RoundedCornerShape(10.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = "💊 ${med.nome} x${med.scatole}",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = GreenPrimary
-                            )
-                        }
-                    }
-
-                    if (list.size > displayCount) {
-                        Box(
-                            modifier = Modifier
-                                .background(Color(0xFFE2E8F0), RoundedCornerShape(10.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = "+${list.size - displayCount}",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Slate900
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Expanded Collapsible Area
-            AnimatedVisibility(
-                visible = expanded,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(top = 14.dp)
-                        .fillMaxWidth()
-                ) {
-                    Divider(color = GrayBorder, modifier = Modifier.padding(bottom = 10.dp))
-
-                    Text(
-                        text = "Testo della richiesta:",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = Slate600,
-                        modifier = Modifier.padding(bottom = 6.dp)
-                    )
-
-                    // Verbatim box
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(GrayBackground, RoundedCornerShape(10.dp))
-                            .border(1.dp, GrayBorder, RoundedCornerShape(10.dp))
-                            .padding(12.dp)
+            // Settings Overlay
+            if (showSettings) {
+                Dialog(onDismissRequest = { /* Handle via BackHandler in content */ }) {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = White
                     ) {
-                        Text(
-                            text = request.testoCompleto,
-                            fontSize = 15.sp,
-                            color = Slate900,
-                            lineHeight = 20.sp
+                        SettingsPanelContent(
+                            settings = settings,
+                            medications = medications,
+                            viewModel = viewModel,
+                            onClose = { showSettings = false }
                         )
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        // Resend based on config
-                        Button(
-                            onClick = onRepeatRequest,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (settings.tipoInvio) GreenPrimary else Slate900
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .weight(1.3f)
-                                .height(54.dp)
-                                .testTag("retry_request_${request.id}")
-                        ) {
-                            Text(
-                                text = if (settings.tipoInvio) "Invia di nuovo WA" else "Invia di nuovo SMS",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = White
-                            )
-                        }
-
-                        // Copy To Clipboard
-                        Button(
-                            onClick = {
-                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                val clip = ClipData.newPlainText("RichFarmaci_Message", request.testoCompleto)
-                                clipboard.setPrimaryClip(clip)
-                                Toast.makeText(context, "Testo copiato!", Toast.LENGTH_SHORT).show()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Slate900),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(54.dp)
-                                .testTag("copy_text_${request.id}")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Share,
-                                contentDescription = null,
-                                tint = White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Copia", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = White)
-                        }
                     }
                 }
             }
@@ -1116,51 +222,106 @@ fun HistoryItemRow(
     }
 }
 
-// Simple FlowRow helper implementation for wrapping chips
 @Composable
-fun FlowRow(
-    mainAxisSpacing: androidx.compose.ui.unit.Dp,
-    crossAxisSpacing: androidx.compose.ui.unit.Dp,
-    content: @Composable () -> Unit
+fun MedicationItem(
+    med: Medication,
+    isSelected: Boolean,
+    requestedQuantity: Int,
+    onQuantityChange: (Int) -> Unit
 ) {
-    androidx.compose.ui.layout.Layout(content = content) { measurables, constraints ->
-        val mainSpacingPx = mainAxisSpacing.roundToPx()
-        val crossSpacingPx = crossAxisSpacing.roundToPx()
-
-        val rows = mutableListOf<MutableList<androidx.compose.ui.layout.Placeable>>()
-        val rowWidths = mutableListOf<Int>()
-        val rowHeights = mutableListOf<Int>()
-
-        var currentRow = mutableListOf<androidx.compose.ui.layout.Placeable>()
-        var currentRowWidth = 0
-        var currentRowHeight = 0
-
-        measurables.forEach { measurable ->
-            val placeable = measurable.measure(constraints)
-
-            if (currentRowWidth + placeable.width > constraints.maxWidth && currentRow.isNotEmpty()) {
-                rows.add(currentRow)
-                rowWidths.add(currentRowWidth - mainSpacingPx)
-                rowHeights.add(currentRowHeight)
-
-                currentRow = mutableListOf()
-                currentRowWidth = 0
-                currentRowHeight = 0
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onQuantityChange(if (isSelected) 0 else med.scatole) },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) GreenLightBg else White
+        ),
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) GreenPrimary else GrayBorder
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = med.nome,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Slate900
+                )
+                if (med.note.isNotBlank()) {
+                    Text(
+                        text = med.note,
+                        fontSize = 13.sp,
+                        color = Slate600
+                    )
+                }
             }
 
-            currentRow.add(placeable)
-            currentRowWidth += placeable.width + mainSpacingPx
-            currentRowHeight = maxOf(currentRowHeight, placeable.height)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (isSelected) {
+                    IconButton(onClick = { if (requestedQuantity > 1) onQuantityChange(requestedQuantity - 1) }) {
+                        Text("−", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Slate900)
+                    }
+                    Text(
+                        text = requestedQuantity.toString(),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                    IconButton(onClick = { onQuantityChange(requestedQuantity + 1) }) {
+                        Text("+", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = GreenPrimary)
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .border(1.dp, GrayBorder, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Empty circle
+                    }
+                }
+            }
         }
+    }
+}
 
-        if (currentRow.isNotEmpty()) {
-            rows.add(currentRow)
-            rowWidths.add(currentRowWidth - mainSpacingPx)
-            rowHeights.add(currentRowHeight)
+@Composable
+fun LayoutGrid(
+    columns: Int,
+    rows: Int,
+    mainSpacing: androidx.compose.ui.unit.Dp,
+    crossSpacing: androidx.compose.ui.unit.Dp,
+    content: @Composable () -> Unit
+) {
+    androidx.compose.ui.layout.Layout(content) { measurables, constraints ->
+        val mainSpacingPx = mainSpacing.roundToPx()
+        val crossSpacingPx = crossSpacing.roundToPx()
+        val placeables = measurables.map { it.measure(constraints) }
+        
+        var totalWidth = 0
+        var totalHeight = 0
+        val rowHeights = IntArray(rows) { 0 }
+        
+        val rows = placeables.chunked(columns)
+        rows.forEachIndexed { rowIndex, row ->
+            var rowWidth = 0
+            row.forEach { placeable ->
+                rowWidth += placeable.width + mainSpacingPx
+                rowHeights[rowIndex] = maxOf(rowHeights[rowIndex], placeable.height)
+            }
+            totalWidth = maxOf(totalWidth, rowWidth - mainSpacingPx)
+            totalHeight += rowHeights[rowIndex] + crossSpacingPx
         }
-
-        val totalHeight = rowHeights.sum() + (rowHeights.size - 1).coerceAtLeast(0) * crossSpacingPx
-        val totalWidth = rowWidths.maxOrNull() ?: 0
+        totalHeight -= crossSpacingPx
 
         layout(
             width = maxOf(constraints.minWidth, totalWidth),
@@ -1199,15 +360,131 @@ fun SettingsPanelContent(
     var pCf by remember { mutableStateOf(settings.pazienteCf) }
     var mNome by remember { mutableStateOf(settings.medicoNome) }
     var mTel by remember { mutableStateOf(settings.medicoTelefono) }
+    var mEmail by remember { mutableStateOf(settings.medicoEmail) }
     var secInd by remember { mutableStateOf(settings.secondoIndirizzo) }
     var msgTesta by remember { mutableStateOf(settings.messaggioTesta) }
     var msgCoda by remember { mutableStateOf(settings.messaggioCoda) }
-    var valType by remember { mutableStateOf(settings.tipoInvio) } // true = WA, false = SMS
+    var valType by remember { mutableStateOf(settings.tipoInvio) } // 0=WA, 1=SMS, 2=Email
+
+    var showExitConfirmation by remember { mutableStateOf(false) }
+
+    val hasChanges = pNome != settings.pazienteNome ||
+            pCf != settings.pazienteCf ||
+            mNome != settings.medicoNome ||
+            mTel != settings.medicoTelefono ||
+            mEmail != settings.medicoEmail ||
+            secInd != settings.secondoIndirizzo ||
+            msgTesta != settings.messaggioTesta ||
+            msgCoda != settings.messaggioCoda ||
+            valType != settings.tipoInvio
+
+    BackHandler(enabled = hasChanges) {
+        showExitConfirmation = true
+    }
 
     // Local drug inventory fields
     var dNome by remember { mutableStateOf("") }
     var dScatole by remember { mutableStateOf(1) }
     var dNote by remember { mutableStateOf("") }
+
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editMedicationId by remember { mutableStateOf("") }
+    var editMedicationName by remember { mutableStateOf("") }
+    var editMedicationBoxes by remember { mutableStateOf(1) }
+    var editMedicationNotes by remember { mutableStateOf("") }
+
+    if (showEditDialog) {
+        Dialog(onDismissRequest = { showEditDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                colors = CardDefaults.cardColors(containerColor = White)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Modifica Farmaco", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Slate900)
+                    
+                    OutlinedTextField(
+                        value = editMedicationName,
+                        onValueChange = { editMedicationName = it },
+                        label = { Text("Nome Farmaco") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Scatole standard:",
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            IconButton(onClick = { if (editMedicationBoxes > 1) editMedicationBoxes-- }) {
+                                Text("−", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Text(editMedicationBoxes.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            IconButton(onClick = { editMedicationBoxes++ }) {
+                                Text("+", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = editMedicationNotes,
+                        onValueChange = { editMedicationNotes = it },
+                        label = { Text("Note aggiuntive") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(onClick = { showEditDialog = false }) {
+                            Text("Annulla")
+                        }
+                        Button(
+                            onClick = {
+                                viewModel.updateMedication(
+                                    Medication(
+                                        id = editMedicationId,
+                                        nome = editMedicationName,
+                                        scatole = editMedicationBoxes,
+                                        note = editMedicationNotes
+                                    )
+                                )
+                                showEditDialog = false
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+                        ) {
+                            Text("Salva", color = White)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showExitConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showExitConfirmation = false },
+            title = { Text("Modifiche non salvate") },
+            text = { Text("Ci sono delle modifiche non salvate. Vuoi uscire comunque senza salvare?") },
+            confirmButton = {
+                TextButton(onClick = onClose) {
+                    Text("Esci senza salvare", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExitConfirmation = false }) {
+                    Text("Rimani qui")
+                }
+            }
+        )
+    }
 
     // Launcher device system Contacts importer
     val pickContactLauncher = rememberLauncherForActivityResult(
@@ -1216,6 +493,7 @@ fun SettingsPanelContent(
             if (uri != null) {
                 var cName = ""
                 var cPhone = ""
+                var cEmail = ""
                 val resolver = context.contentResolver
 
                 try {
@@ -1229,23 +507,40 @@ fun SettingsPanelContent(
                             val idCol = cursor.getColumnIndex(ContactsContract.Contacts._ID)
                             if (idCol >= 0) {
                                 val contactId = cursor.getString(idCol)
+                                
+                                // Phone Query
                                 val hasPhoneCol = cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)
                                 val hasPhone = if (hasPhoneCol >= 0) cursor.getInt(hasPhoneCol) else 0
 
                                 if (hasPhone > 0) {
-                                    val phoneCursor = resolver.query(
+                                    resolver.query(
                                         ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                                         null,
                                         ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
                                         arrayOf(contactId),
                                         null
-                                    )
-                                    phoneCursor?.use { pCursor ->
+                                    )?.use { pCursor ->
                                         if (pCursor.moveToFirst()) {
                                             val numCol = pCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
                                             if (numCol >= 0) {
                                                 cPhone = pCursor.getString(numCol) ?: ""
                                             }
+                                        }
+                                    }
+                                }
+
+                                // Email Query
+                                resolver.query(
+                                    ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                                    null,
+                                    ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
+                                    arrayOf(contactId),
+                                    null
+                                )?.use { eCursor ->
+                                    if (eCursor.moveToFirst()) {
+                                        val emailCol = eCursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS)
+                                        if (emailCol >= 0) {
+                                            cEmail = eCursor.getString(emailCol) ?: ""
                                         }
                                     }
                                 }
@@ -1258,6 +553,7 @@ fun SettingsPanelContent(
                         // Normalize phone from spaces
                         mTel = cPhone.replace("\\s".toRegex(), "").replace("[^+0-9]".toRegex(), "")
                     }
+                    if (cEmail.isNotBlank()) mEmail = cEmail
                 } catch (e: Exception) {
                     Toast.makeText(context, "Errore nell'accesso ai contatti.", Toast.LENGTH_SHORT).show()
                 }
@@ -1299,7 +595,13 @@ fun SettingsPanelContent(
                 )
 
                 IconButton(
-                    onClick = onClose,
+                    onClick = {
+                        if (hasChanges) {
+                            showExitConfirmation = true
+                        } else {
+                            onClose()
+                        }
+                    },
                     modifier = Modifier
                         .size(48.dp)
                         .background(GrayBackground, CircleShape)
@@ -1436,13 +738,32 @@ fun SettingsPanelContent(
             OutlinedTextField(
                 value = mTel,
                 onValueChange = { mTel = it },
-                label = { Text("Cellulare Medico (Obbligatorio)", fontSize = 16.sp) },
+                label = { Text("Cellulare Medico", fontSize = 16.sp) },
                 placeholder = { Text("es: 3391234567", fontSize = 15.sp) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("doctor_phone_input"),
                 textStyle = LocalTextStyle.current.copy(fontSize = 18.sp, color = Slate900),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = GreenPrimary,
+                    unfocusedBorderColor = GrayBorder
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+        }
+
+        item {
+            OutlinedTextField(
+                value = mEmail,
+                onValueChange = { mEmail = it },
+                label = { Text("Email Medico", fontSize = 16.sp) },
+                placeholder = { Text("es: dottore@studio.it", fontSize = 15.sp) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("doctor_email_input"),
+                textStyle = LocalTextStyle.current.copy(fontSize = 18.sp, color = Slate900),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = GreenPrimary,
                     unfocusedBorderColor = GrayBorder
@@ -1489,14 +810,13 @@ fun SettingsPanelContent(
                 label = { Text("Inizio Messaggio (Frase di Testa)", fontSize = 15.sp) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(96.dp)
+                    .heightIn(min = 120.dp)
                     .testTag("header_template_input"),
                 textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, color = Slate900),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = GreenPrimary,
                     unfocusedBorderColor = GrayBorder
                 ),
-                maxLines = 3,
                 shape = RoundedCornerShape(12.dp)
             )
         }
@@ -1508,23 +828,21 @@ fun SettingsPanelContent(
                 label = { Text("Fine Messaggio (Frase di Coda)", fontSize = 15.sp) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(96.dp)
+                    .heightIn(min = 120.dp)
                     .testTag("footer_template_input"),
                 textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, color = Slate900),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = GreenPrimary,
                     unfocusedBorderColor = GrayBorder
                 ),
-                maxLines = 3,
                 shape = RoundedCornerShape(12.dp)
             )
         }
 
         item {
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     text = "Tipo Invio Predefinito:",
@@ -1533,62 +851,84 @@ fun SettingsPanelContent(
                     color = Slate900
                 )
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("SMS", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Slate900)
-                    Switch(
-                        checked = valType,
-                        onCheckedChange = { valType = it },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = GreenPrimary,
-                            checkedTrackColor = GreenLightBg,
-                            uncheckedThumbColor = Slate600,
-                            uncheckedTrackColor = GrayBorder
-                        ),
-                        modifier = Modifier.testTag("delivery_type_switch")
-                    )
-                    Text("WhatsApp", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Slate900)
+                    listOf("WhatsApp", "SMS", "Email").forEachIndexed { index, label ->
+                        val selected = valType == index
+                        val color = if (selected) {
+                            when(index) {
+                                0 -> GreenPrimary
+                                1 -> Slate900
+                                else -> Color(0xFF6366F1) // Indigo/Violet color instead of Red
+                            }
+                        } else GrayBorder
+
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                                .clickable { valType = index },
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (selected) color else White,
+                            border = if (!selected) BorderStroke(1.dp, GrayBorder) else null
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = label,
+                                    color = if (selected) White else Slate600,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
 
         // Action Trigger Save
         item {
-            val formsFilled = pNome.isNotBlank() && pCf.isNotBlank() && mNome.isNotBlank() && mTel.isNotBlank()
-            Button(
-                onClick = {
-                    if (formsFilled) {
-                        viewModel.savePatientSettings(
-                            PatientSettings(
-                                pazienteNome = pNome,
-                                pazienteCf = pCf,
-                                medicoNome = mNome,
-                                medicoTelefono = mTel,
-                                secondoIndirizzo = secInd,
-                                messaggioTesta = msgTesta,
-                                messaggioCoda = msgCoda,
-                                tipoInvio = valType
+            val formsFilled = pNome.isNotBlank() && pCf.isNotBlank() && mNome.isNotBlank() && (
+                    (valType == 2 && mEmail.isNotBlank()) || (valType != 2 && mTel.isNotBlank())
+                    )
+
+            if (hasChanges) {
+                Button(
+                    onClick = {
+                        if (formsFilled) {
+                            viewModel.savePatientSettings(
+                                PatientSettings(
+                                    pazienteNome = pNome,
+                                    pazienteCf = pCf,
+                                    medicoNome = mNome,
+                                    medicoTelefono = mTel,
+                                    medicoEmail = mEmail,
+                                    secondoIndirizzo = secInd,
+                                    messaggioTesta = msgTesta,
+                                    messaggioCoda = msgCoda,
+                                    tipoInvio = valType
+                                )
                             )
-                        )
-                        Toast.makeText(context, "Profilo salvato!", Toast.LENGTH_SHORT).show()
-                        onClose()
-                    } else {
-                        Toast.makeText(context, "Riempi tutti i campi obbligatori (*)", Toast.LENGTH_LONG).show()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .testTag("save_settings_button"),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = GreenPrimary,
-                    disabledContainerColor = GrayBorder
-                ),
-                shape = RoundedCornerShape(16.dp),
-                enabled = formsFilled
-            ) {
-                Text("SALVA CONFIGURAZIONE", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = White)
+                            Toast.makeText(context, "Profilo salvato!", Toast.LENGTH_SHORT).show()
+                            onClose()
+                        } else {
+                            Toast.makeText(context, "Riempi tutti i campi obbligatori per il tipo di invio scelto", Toast.LENGTH_LONG).show()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .testTag("save_settings_button"),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,
+                        disabledContainerColor = GrayBorder
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = formsFilled
+                ) {
+                    Text("SALVA CONFIGURAZIONE", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = White)
+                }
             }
         }
 
@@ -1655,7 +995,8 @@ fun SettingsPanelContent(
                             text = "Scatole standard:",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Slate600
+                            color = Slate600,
+                            modifier = Modifier.weight(1f)
                         )
 
                         Row(
@@ -1784,13 +1125,20 @@ fun SettingsPanelContent(
                 }
             }
         } else {
-            items(medications, key = { it.id }) { med ->
-                ConfigurationMedicationRow(
-                    med = med,
-                    onToggleStandby = { viewModel.toggleMedicationStandby(med) },
-                    onDelete = { viewModel.deleteMedication(med) }
-                )
-            }
+                    items(medications, key = { it.id }) { med ->
+                        ConfigurationMedicationRow(
+                            med = med,
+                            onEdit = {
+                                editMedicationId = med.id
+                                editMedicationName = med.nome
+                                editMedicationBoxes = med.scatole
+                                editMedicationNotes = med.note
+                                showEditDialog = true
+                            },
+                            onToggleStandby = { viewModel.toggleMedicationStandby(med) },
+                            onDelete = { viewModel.deleteMedication(med) }
+                        )
+                    }
         }
 
         // bottom spacer to guarantee list bottom accessibility spacing
@@ -1803,6 +1151,7 @@ fun SettingsPanelContent(
 @Composable
 fun ConfigurationMedicationRow(
     med: Medication,
+    onEdit: () -> Unit,
     onToggleStandby: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -1812,6 +1161,7 @@ fun ConfigurationMedicationRow(
         border = BorderStroke(1.2.dp, if (med.inPausa) GrayBorder else GreenPrimary),
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onEdit() }
             .testTag("settings_med_row_${med.id}")
     ) {
         Row(
@@ -1830,21 +1180,6 @@ fun ConfigurationMedicationRow(
                         color = if (med.inPausa) Slate600 else Slate900,
                         modifier = Modifier.alpha(if (med.inPausa) 0.6f else 1f)
                     )
-                    if (med.inPausa) {
-                        Box(
-                            modifier = Modifier
-                                .padding(start = 8.dp)
-                                .background(Color(0xFFE2E8F0), RoundedCornerShape(6.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = "PAUSA",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Slate600
-                            )
-                        }
-                    }
                 }
                 if (med.note.isNotBlank()) {
                     Text(
@@ -1935,4 +1270,3 @@ fun PharmacyCross(modifier: Modifier = Modifier, color: Color = GreenPrimary) {
         )
     }
 }
-

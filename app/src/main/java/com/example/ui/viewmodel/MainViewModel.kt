@@ -5,6 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import com.example.data.db.AppDatabase
 import com.example.data.model.Medication
 import com.example.data.model.PatientSettings
@@ -100,6 +103,50 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _settings.value = settingsManager.getSettings()
     }
 
+    // Update selection from UI (handles both selection toggle and quantity)
+    fun updateSelection(medication: Medication, quantity: Int) {
+        val currentSelected = _selectedMedicationIds.value
+        if (quantity <= 0) {
+            if (currentSelected.contains(medication.id)) {
+                toggleMedicationSelection(medication)
+            }
+        } else {
+            if (!currentSelected.contains(medication.id)) {
+                toggleMedicationSelection(medication)
+            }
+            setQuantityForMedication(medication.id, quantity)
+        }
+    }
+
+    fun generateRequestIntent(context: Context): Intent? {
+        val message = buildFormattedMessage()
+        val currentSettings = _settings.value
+        
+        return when (currentSettings.tipoInvio) {
+            0 -> { // WhatsApp
+                val intent = Intent(Intent.ACTION_VIEW)
+                val phone = currentSettings.medicoTelefono.replace("+", "").replace(" ", "")
+                val url = "https://api.whatsapp.com/send?phone=$phone&text=${Uri.encode(message)}"
+                intent.data = Uri.parse(url)
+                intent
+            }
+            1 -> { // SMS
+                val intent = Intent(Intent.ACTION_SENDTO)
+                intent.data = Uri.parse("smsto:${currentSettings.medicoTelefono}")
+                intent.putExtra("sms_body", message)
+                intent
+            }
+            2 -> { // Email
+                val intent = Intent(Intent.ACTION_SENDTO)
+                intent.data = Uri.parse("mailto:${currentSettings.medicoEmail}")
+                intent.putExtra(Intent.EXTRA_SUBJECT, "Richiesta Farmaci: ${currentSettings.pazienteNome}")
+                intent.putExtra(Intent.EXTRA_TEXT, message)
+                intent
+            }
+            else -> null
+        }
+    }
+
     // Toggle medication selection for the rapid order
     fun toggleMedicationSelection(medication: Medication) {
         val currentSelected = _selectedMedicationIds.value.toMutableSet()
@@ -137,6 +184,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Save profile configurations
     fun savePatientSettings(newSettings: PatientSettings) {
         viewModelScope.launch {
+            val oldSettings = settingsManager.getSettings()
+            
+            // Se il nome del medico è cambiato, cancella tutti i dati precedenti
+            val doctorChanged = oldSettings.medicoNome.isNotBlank() && 
+                               oldSettings.medicoNome != newSettings.medicoNome
+
+            if (doctorChanged) {
+                medicationRepository.clearAll()
+                sentRequestRepository.clearAll()
+                clearFormSelection()
+            }
+
             settingsManager.saveSettings(newSettings)
             updateConfigStatus()
 
@@ -177,6 +236,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (updated.inPausa && _selectedMedicationIds.value.contains(updated.id)) {
                 toggleMedicationSelection(updated)
             }
+        }
+    }
+
+    fun updateMedication(medication: Medication) {
+        viewModelScope.launch {
+            medicationRepository.update(medication)
         }
     }
 
@@ -221,6 +286,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         sb.append("Codice Fiscale: ${currentProfile.pazienteCf.uppercase()}\n")
         if (currentProfile.secondoIndirizzo.isNotBlank()) {
             sb.append("Note di Recapito: ${currentProfile.secondoIndirizzo}\n")
+        }
+        if (currentProfile.tipoInvio == 2 && currentProfile.medicoEmail.isNotBlank()) {
+            sb.append("\nInviato via Email a: ${currentProfile.medicoEmail}\n")
         }
 
         sb.append("\n").append(currentProfile.messaggioCoda)
