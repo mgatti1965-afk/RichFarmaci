@@ -192,7 +192,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             if (doctorChanged) {
                 medicationRepository.clearAll()
-                sentRequestRepository.clearAll()
                 clearFormSelection()
             }
 

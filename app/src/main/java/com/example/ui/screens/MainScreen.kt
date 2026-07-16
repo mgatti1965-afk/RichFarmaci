@@ -41,6 +41,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,138 +78,230 @@ fun MainScreen(viewModel: MainViewModel) {
     val medications by viewModel.medications.collectAsState()
     val selectedIds by viewModel.selectedMedicationIds.collectAsState()
     val selectedQuantities by viewModel.selectedQuantities.collectAsState()
+    val currentTab by viewModel.currentTab.collectAsState()
+    val sentRequests by viewModel.sentRequests.collectAsState()
     var showSettings by remember { mutableStateOf(false) }
+    var helpType by remember { mutableStateOf<String?>(null) }
+    var viewingRequestText by remember { mutableStateOf<String?>(null) }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = GrayBackground
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
+    if (helpType != null) {
+        HelpDialog(type = helpType!!, onDismiss = { helpType = null })
+    }
+
+    if (viewingRequestText != null) {
+        AlertDialog(
+            onDismissRequest = { viewingRequestText = null },
+            title = { Text("Dettaglio Messaggio", fontWeight = FontWeight.Bold) },
+            text = { 
+                Box(modifier = Modifier.heightIn(max = 400.dp)) {
+                    Text(viewingRequestText!!, fontSize = 14.sp, color = Slate600)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { viewingRequestText = null }) {
+                    Text("Chiudi", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = White
+        )
+    }
+
+    Scaffold { paddingValues ->
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            color = GrayBackground
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
                 // Header
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(White)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    PharmacyCross(modifier = Modifier.size(40.dp))
-                    Text(
-                        text = "Richiesta Farmaci",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Slate900
-                    )
-                    IconButton(
-                        onClick = { showSettings = true },
-                        modifier = Modifier
-                            .background(White, CircleShape)
-                            .border(1.dp, GrayBorder, CircleShape)
-                    ) {
-                        Icon(Icons.Default.Settings, contentDescription = "Impostazioni", tint = Slate600)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Patient Info Card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, GrayBorder)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        PharmacyCross(modifier = Modifier.size(32.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Paziente: ${settings.pazienteNome.ifBlank { "Non configurato" }}",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
+                            text = "RichFarmaci",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Black,
                             color = Slate900
                         )
-                        Text(
-                            text = "Medico: ${settings.medicoNome.ifBlank { "Non configurato" }}",
-                            fontSize = 14.sp,
-                            color = Slate600
-                        )
                     }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Medication Grid
-                Text(
-                    text = "Seleziona i farmaci da richiedere:",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Slate600,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(1),
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp)
-                ) {
-                    items(medications.filter { !it.inPausa }) { med ->
-                        val isSelected = selectedIds.contains(med.id)
-                        val quantity = selectedQuantities[med.id] ?: 0
-                        MedicationItem(
-                            med = med,
-                            isSelected = isSelected,
-                            requestedQuantity = quantity,
-                            onQuantityChange = { viewModel.updateSelection(med, it) }
-                        )
-                    }
-                }
-            }
-
-            // Bottom Send Action
-            val selectedCount = selectedIds.size
-            AnimatedVisibility(
-                visible = selectedCount > 0,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-            ) {
-                Button(
-                    onClick = {
-                        val intent = viewModel.generateRequestIntent(context)
-                        if (intent != null) {
-                            context.startActivity(intent)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IconButton(
+                            onClick = { helpType = if (currentTab == 0) "richiesta" else "cronologia" },
+                            modifier = Modifier.background(GrayBackground, CircleShape)
+                        ) {
+                            Icon(Icons.Default.HelpOutline, contentDescription = "Aiuto", tint = Slate600)
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                        IconButton(
+                            onClick = { showSettings = true },
+                            modifier = Modifier.background(GrayBackground, CircleShape)
+                        ) {
+                            Icon(Icons.Default.Settings, contentDescription = "Impostazioni", tint = Slate600)
+                        }
+                    }
+                }
+
+                TabRow(
+                    selectedTabIndex = currentTab,
+                    containerColor = White,
+                    contentColor = GreenPrimary,
+                    indicator = { tabPositions ->
+                        TabRowDefaults.SecondaryIndicator(
+                            Modifier.tabIndicatorOffset(tabPositions[currentTab]),
+                            color = GreenPrimary
+                        )
+                    }
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = White)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "INVIA RICHIESTA ($selectedCount)",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = White
+                    Tab(
+                        selected = currentTab == 0,
+                        onClick = { viewModel.selectTab(0) },
+                        text = { Text("RICHIESTA", fontWeight = FontWeight.Bold) },
+                        icon = { Icon(Icons.Default.EditNote, contentDescription = null) }
                     )
+                    Tab(
+                        selected = currentTab == 1,
+                        onClick = { viewModel.selectTab(1) },
+                        text = { Text("CRONOLOGIA", fontWeight = FontWeight.Bold) },
+                        icon = { Icon(Icons.Default.History, contentDescription = null) }
+                    )
+                }
+
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (currentTab == 0) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        ) {
+                            // Patient Info Summary
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = GreenLightBg),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, GreenPrimary.copy(alpha = 0.2f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Person, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "${settings.pazienteNome.ifBlank { "Configura profilo" }} • Medico: ${settings.medicoNome.ifBlank { "..." }}",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Slate900
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                text = "Cosa ti serve oggi?",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Slate600
+                            )
+
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(1),
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                                contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp)
+                            ) {
+                                items(medications.filter { !it.inPausa }) { med ->
+                                    val isSelected = selectedIds.contains(med.id)
+                                    val quantity = selectedQuantities[med.id] ?: 0
+                                    MedicationItem(
+                                        med = med,
+                                        isSelected = isSelected,
+                                        requestedQuantity = quantity,
+                                        onQuantityChange = { viewModel.updateSelection(med, it) }
+                                    )
+                                }
+                            }
+                        }
+
+                        // Bottom Send Action
+                        val selectedCount = selectedIds.size
+                        Column(modifier = Modifier.align(Alignment.BottomCenter)) {
+                            AnimatedVisibility(
+                                visible = selectedCount > 0,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically(),
+                                modifier = Modifier
+                                    .padding(16.dp)
+                            ) {
+                                Button(
+                                    onClick = {
+                                        val message = viewModel.buildFormattedMessage()
+                                        val intent = viewModel.generateRequestIntent(context)
+                                        if (intent != null) {
+                                            context.startActivity(intent)
+                                            viewModel.recordSentRequest(message)
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(64.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                                    shape = RoundedCornerShape(16.dp),
+                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = White)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "INVIA AL MEDICO ($selectedCount)",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = White
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        // History Screen
+                        if (sentRequests.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(64.dp), tint = GrayBorder)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Nessuna richiesta inviata.", color = Slate600)
+                                }
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(16.dp)
+                            ) {
+                                items(sentRequests) { request ->
+                                    HistoryItem(
+                                        request = request,
+                                        onView = { viewingRequestText = request.testoCompleto },
+                                        onDelete = { viewModel.deleteHistoryItem(request) }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
             // Settings Overlay
             if (showSettings) {
-                Dialog(onDismissRequest = { /* Handle via BackHandler in content */ }) {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = White
-                    ) {
+                Dialog(onDismissRequest = { /* BackHandler handles this */ }) {
+                    Surface(modifier = Modifier.fillMaxSize(), color = White) {
                         SettingsPanelContent(
                             settings = settings,
                             medications = medications,
@@ -217,6 +310,64 @@ fun MainScreen(viewModel: MainViewModel) {
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun HistoryItem(
+    request: com.example.data.model.SentRequest,
+    onView: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = White),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, GrayBorder)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = request.data,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = GreenPrimary
+                )
+                IconButton(onClick = onDelete, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Default.Delete, contentDescription = "Elimina", tint = Color.Red.copy(alpha = 0.7f), modifier = Modifier.size(20.dp))
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Inviata a: ${request.medicoNome}",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Slate900
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = request.getSentMedications().joinToString(", ") { "${it.nome} (${it.scatole})" },
+                fontSize = 14.sp,
+                color = Slate600,
+                maxLines = 2
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = onView,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GrayBackground),
+                border = BorderStroke(1.dp, GrayBorder)
+            ) {
+                Icon(Icons.Default.Visibility, contentDescription = null, tint = Slate600, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("VISUALIZZA TESTO INVIATO", color = Slate600, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -274,6 +425,7 @@ fun MedicationItem(
                         text = requestedQuantity.toString(),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
+                        color = Slate900,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                     IconButton(onClick = { onQuantityChange(requestedQuantity + 1) }) {
@@ -345,7 +497,6 @@ fun LayoutGrid(
 // -----------------------------------------------------------------------------------------------
 // SETTINGS SCREEN OVERLAY (CONFIG PANEL + INVENTORY MANAGEMENT)
 // -----------------------------------------------------------------------------------------------
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsPanelContent(
     settings: PatientSettings,
@@ -354,6 +505,11 @@ fun SettingsPanelContent(
     onClose: () -> Unit
 ) {
     val context = LocalContext.current
+    var showHelp by remember { mutableStateOf(false) }
+
+    if (showHelp) {
+        HelpDialog(type = "configurazione", onDismiss = { showHelp = false })
+    }
 
     // Local profile fields
     var pNome by remember { mutableStateOf(settings.pazienteNome) }
@@ -418,15 +574,21 @@ fun SettingsPanelContent(
                         Text(
                             text = "Scatole standard:",
                             fontWeight = FontWeight.Bold,
+                            color = Slate900,
                             modifier = Modifier.weight(1f)
                         )
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             IconButton(onClick = { if (editMedicationBoxes > 1) editMedicationBoxes-- }) {
-                                Text("−", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                Text("−", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Slate900)
                             }
-                            Text(editMedicationBoxes.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = editMedicationBoxes.toString(),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Slate900
+                            )
                             IconButton(onClick = { editMedicationBoxes++ }) {
-                                Text("+", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                Text("+", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = GreenPrimary)
                             }
                         }
                     }
@@ -594,25 +756,41 @@ fun SettingsPanelContent(
                     color = Slate900
                 )
 
-                IconButton(
-                    onClick = {
-                        if (hasChanges) {
-                            showExitConfirmation = true
-                        } else {
-                            onClose()
-                        }
-                    },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(GrayBackground, CircleShape)
-                        .testTag("close_settings_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Chiudi",
-                        tint = Slate900,
-                        modifier = Modifier.size(28.dp)
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IconButton(
+                        onClick = { showHelp = true },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(GrayBackground, CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.HelpOutline,
+                            contentDescription = "Aiuto",
+                            tint = Slate900,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = {
+                            if (hasChanges) {
+                                showExitConfirmation = true
+                            } else {
+                                onClose()
+                            }
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(GrayBackground, CircleShape)
+                            .testTag("close_settings_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Chiudi",
+                            tint = Slate900,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
             }
             Divider(color = GrayBorder, modifier = Modifier.padding(top = 8.dp))
@@ -1247,6 +1425,66 @@ fun Modifier.shadowUnderline(): Modifier = this.border(
     width = 1.dp,
     color = Color(0xFFE2E8F0)
 )
+
+@Composable
+fun HelpDialog(type: String, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.HelpOutline, contentDescription = null, tint = GreenPrimary)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = when(type) {
+                        "richiesta" -> "Guida Richiesta"
+                        "cronologia" -> "Guida Cronologia"
+                        else -> "Guida Configurazione"
+                    },
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Slate900
+                )
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                when(type) {
+                    "richiesta" -> {
+                        HelpItem("Seleziona i farmaci cliccando sul loro nome.")
+                        HelpItem("Regola il numero di scatole con i tasti che appaiono dopo la selezione.")
+                        HelpItem("Premi 'INVIA AL MEDICO' per inviare la richiesta tramite il canale scelto (WA/SMS/Email).")
+                    }
+                    "cronologia" -> {
+                        HelpItem("Qui trovi l'elenco di tutte le richieste inviate in passato.")
+                        HelpItem("Premi 'VISUALIZZA TESTO INVIATO' per leggere i dettagli della richiesta.")
+                        HelpItem("Il cestino elimina la singola voce dallo storico.")
+                    }
+                    "configurazione" -> {
+                        HelpItem("Anagrafica: inserisci nome e codice fiscale del paziente.")
+                        HelpItem("Medico: importa il contatto dalla rubrica o inseriscilo manualmente.")
+                        HelpItem("Tipo Invio: scegli WhatsApp per un invio rapido e gratuito.")
+                        HelpItem("Rubrica: aggiungi qui i farmaci che prendi di solito per trovarli pronti all'uso.")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Ho capito", color = GreenPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = White
+    )
+}
+
+@Composable
+fun HelpItem(text: String) {
+    Row(verticalAlignment = Alignment.Top, modifier = Modifier.fillMaxWidth()) {
+        Text("• ", fontWeight = FontWeight.Bold, color = GreenPrimary, fontSize = 18.sp)
+        Text(text = text, fontSize = 15.sp, color = Slate600)
+    }
+}
 
 @Composable
 fun PharmacyCross(modifier: Modifier = Modifier, color: Color = GreenPrimary) {
