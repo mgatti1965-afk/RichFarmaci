@@ -10,7 +10,10 @@ data class Medication(
     val nome: String,
     val scatole: Int = 1,
     val note: String = "",
-    val inPausa: Boolean = false
+    val inPausa: Boolean = false,
+    val notificaAttiva: Boolean = false,
+    val orarioNotifica: String = "08:00",
+    val ripetiOgniOre: Int = 0 // 0 means no repetition
 )
 
 data class SentMedication(
@@ -70,5 +73,7 @@ data class PatientSettings(
     val secondoIndirizzo: String = "",
     val messaggioTesta: String = "Gentile Dottore, Le chiedo cortesemente la prescrizione dei seguenti medicinali intestati a me:",
     val messaggioCoda: String = "La ringrazio per la disponibilità. Cordiali saluti.",
-    val tipoInvio: Int = 0
+    val tipoInvio: Int = 0,
+    val notificheAttive: Boolean = false,
+    val descrizioneNotifica: String = "È ora di prendere il farmaco"
 )

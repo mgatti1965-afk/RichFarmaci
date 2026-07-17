@@ -198,6 +198,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             settingsManager.saveSettings(newSettings)
             updateConfigStatus()
 
+            // Update notifications scheduling
+            val currentMedications = medications.value
+            com.example.util.NotificationHelper.updateAllNotifications(
+                getApplication(),
+                currentMedications,
+                newSettings.notificheAttive,
+                newSettings.descrizioneNotifica
+            )
+
             // Check Special CF criteria
             // "Se viene confermato il C.F. del paziente uguale a CLLRNN40M59L957V e la lista dei medicinali è vuota inizializzarli"
             val cfUppercase = newSettings.pazienteCf.trim().uppercase()
@@ -211,7 +220,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // Medication Manager Operations (Crud in configure panel)
-    fun addMedication(nome: String, scatole: Int, note: String) {
+    fun addMedication(nome: String, scatole: Int, note: String, notificaAttiva: Boolean = false, orarioNotifica: String = "08:00", ripetiOgniOre: Int = 0) {
         viewModelScope.launch {
             if (nome.isNotBlank()) {
                 val newMed = Medication(
@@ -219,9 +228,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     nome = nome.trim(),
                     scatole = scatole.coerceAtLeast(1),
                     note = note.trim(),
-                    inPausa = false
+                    inPausa = false,
+                    notificaAttiva = notificaAttiva,
+                    orarioNotifica = orarioNotifica,
+                    ripetiOgniOre = ripetiOgniOre
                 )
                 medicationRepository.insert(newMed)
+                
+                // Schedule notification if active
+                if (_settings.value.notificheAttive) {
+                    com.example.util.NotificationHelper.scheduleNotification(
+                        getApplication(),
+                        newMed,
+                        _settings.value.descrizioneNotifica
+                    )
+                }
             }
         }
     }
@@ -235,12 +256,34 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (updated.inPausa && _selectedMedicationIds.value.contains(updated.id)) {
                 toggleMedicationSelection(updated)
             }
+
+            // Update notification
+            if (_settings.value.notificheAttive) {
+                if (updated.inPausa) {
+                    com.example.util.NotificationHelper.cancelNotification(getApplication(), updated)
+                } else {
+                    com.example.util.NotificationHelper.scheduleNotification(
+                        getApplication(),
+                        updated,
+                        _settings.value.descrizioneNotifica
+                    )
+                }
+            }
         }
     }
 
     fun updateMedication(medication: Medication) {
         viewModelScope.launch {
             medicationRepository.update(medication)
+            
+            // Update notification
+            if (_settings.value.notificheAttive) {
+                com.example.util.NotificationHelper.scheduleNotification(
+                    getApplication(),
+                    medication,
+                    _settings.value.descrizioneNotifica
+                )
+            }
         }
     }
 
@@ -250,6 +293,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (_selectedMedicationIds.value.contains(medication.id)) {
                 toggleMedicationSelection(medication)
             }
+            
+            // Cancel notification
+            com.example.util.NotificationHelper.cancelNotification(getApplication(), medication)
         }
     }
 

@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.example.data.model.Medication
 import com.example.data.model.SentRequest
 
-@Database(entities = [Medication::class, SentRequest::class], version = 1, exportSchema = false)
+@Database(entities = [Medication::class, SentRequest::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun medicationDao(): MedicationDao
     abstract fun sentRequestDao(): SentRequestDao

@@ -23,7 +23,9 @@ class PatientSettingsManager(context: Context) {
                 "messaggio_coda",
                 "La ringrazio per la disponibilità. Cordiali saluti."
             ) ?: "La ringrazio per la disponibilità. Cordiali saluti.",
-            tipoInvio = prefs.getInt("tipo_invio_int", 0) // Default to 0 (WhatsApp)
+            tipoInvio = prefs.getInt("tipo_invio_int", 0), // Default to 0 (WhatsApp)
+            notificheAttive = prefs.getBoolean("notifiche_attive", false),
+            descrizioneNotifica = prefs.getString("descrizione_notifica", "È ora di prendere il farmaco") ?: "È ora di prendere il farmaco"
         )
     }
 
@@ -41,6 +43,8 @@ class PatientSettingsManager(context: Context) {
             putString("messaggio_testa", settings.messaggioTesta.trim())
             putString("messaggio_coda", settings.messaggioCoda.trim())
             putInt("tipo_invio_int", settings.tipoInvio)
+            putBoolean("notifiche_attive", settings.notificheAttive)
+            putString("descrizione_notifica", settings.descrizioneNotifica.trim())
             apply()
         }
     }
