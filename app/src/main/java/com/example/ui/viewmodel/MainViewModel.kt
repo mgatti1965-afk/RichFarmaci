@@ -226,7 +226,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val newMed = Medication(
                     id = UUID.randomUUID().toString(),
                     nome = nome.trim(),
-                    scatole = scatole.coerceAtLeast(1),
+                    scatole = scatole.coerceAtLeast(0),
                     note = note.trim(),
                     inPausa = false,
                     notificaAttiva = notificaAttiva,
@@ -324,7 +324,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             val scatolaWord = if (qty == 1) "scatola" else "scatole"
-            sb.append("- ${med.nome}: $qty $scatolaWord$noteStr\n")
+            sb.append("- ${med.nome}: $qty $scatolaWord$noteStr\n\n")
         }
 
         sb.append("\n")

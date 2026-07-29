@@ -152,7 +152,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     Tab(
                         selected = currentTab == 0,
                         onClick = { viewModel.selectTab(0) },
-                        text = { Text("RICHIESTA", fontWeight = FontWeight.Bold) },
+                        text = { Text("Richiesta", fontWeight = FontWeight.Bold) },
                         icon = { Icon(Icons.Default.EditNote, contentDescription = null) },
                         selectedContentColor = GreenPrimary,
                         unselectedContentColor = Slate600
@@ -160,7 +160,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     Tab(
                         selected = currentTab == 1,
                         onClick = { viewModel.selectTab(1) },
-                        text = { Text("CRONOLOGIA", fontWeight = FontWeight.Bold) },
+                        text = { Text("Cronologia", fontWeight = FontWeight.Bold) },
                         icon = { Icon(Icons.Default.History, contentDescription = null) },
                         selectedContentColor = GreenPrimary,
                         unselectedContentColor = Slate600
@@ -211,7 +211,7 @@ fun MainScreen(viewModel: MainViewModel) {
                                 verticalArrangement = Arrangement.spacedBy(10.dp),
                                 contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp)
                             ) {
-                                items(medications.filter { !it.inPausa }) { med ->
+                                items(medications.filter { !it.inPausa && it.scatole > 0 }) { med ->
                                     val isSelected = selectedIds.contains(med.id)
                                     val quantity = selectedQuantities[med.id] ?: 0
                                     MedicationItem(
@@ -455,7 +455,7 @@ fun HistoryItem(
             ) {
                 Icon(Icons.Default.Visibility, contentDescription = null, tint = Slate600, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("VISUALIZZA TESTO INVIATO", color = Slate600, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text("Visualizza testo inviato", color = Slate600, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -715,7 +715,7 @@ fun SettingsPanelContent(
                             onClose()
                         } else Toast.makeText(context, "Riempi i campi obbligatori (Nome, CF, Medico e Recapito).", Toast.LENGTH_LONG).show()
                     }, modifier = Modifier.fillMaxWidth().height(60.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.Red), shape = RoundedCornerShape(16.dp)) {
-                        Text("SALVA CONFIGURAZIONE", fontWeight = FontWeight.Bold, color = White)
+                        Text("Salva Configurazione", fontWeight = FontWeight.Bold, color = White)
                     }
                 }
             }
@@ -736,7 +736,7 @@ fun SettingsPanelContent(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, tint = White)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("AGGIUNGI NUOVO FARMACO", fontWeight = FontWeight.Bold, color = White)
+                    Text("NUOVO FARMACO/NOTIFICA", fontWeight = FontWeight.Bold, color = White)
                 }
             }
             item { Text("I Tuoi Farmaci Salvati:", fontWeight = FontWeight.Bold, color = Slate900, modifier = Modifier.padding(top = 8.dp)) }
@@ -903,7 +903,7 @@ fun MedicationEditorDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (medication == null) "Aggiungi Farmaco" else "Modifica Farmaco",
+                        text = if (medication == null) "Nuovo Farmaco" else "Modifica Farmaco",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Slate900
@@ -940,7 +940,7 @@ fun MedicationEditorDialog(
                     Text("N. scatole:", fontWeight = FontWeight.Bold, color = Slate600)
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         IconButton(
-                            onClick = { if (scatole > 1) scatole-- },
+                            onClick = { if (scatole > 0) scatole-- },
                             modifier = Modifier.size(36.dp).background(Slate900, RoundedCornerShape(8.dp))
                         ) {
                             Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = White)
@@ -1129,18 +1129,18 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                     "richiesta" -> {
                         HelpItem("Seleziona i farmaci cliccando sul loro nome.")
                         HelpItem("Regola il numero di scatole con i tasti + e -.")
-                        HelpItem("Premi 'INVIA AL MEDICO' per inviare la richiesta.")
+                        HelpItem("Premi 'Invia al Medico' per inviare la richiesta.")
                         HelpItem("Riceverai notifiche negli orari impostati.")
                     }
                     "cronologia" -> {
                         HelpItem("Qui trovi lo storico delle richieste inviate.")
-                        HelpItem("Usa 'VISUALIZZA' per leggere il testo completo.")
+                        HelpItem("Usa 'Visualizza' per leggere il testo completo.")
                         HelpItem("Puoi eliminare vecchie richieste con l'icona cestino.")
                     }
                     "configurazione" -> {
                         HelpItem("Inserisci il tuo Codice Fiscale per permettere al medico di emettere la ricetta elettronica.")
                         HelpItem("Usa il tasto 'Scegli' per importare i dati del medico direttamente dalla tua rubrica telefonica.")
-                        HelpItem("Aggiungi i farmaci che usi abitualmente con il loro N. scatole.")
+                        HelpItem("Aggiungi i farmaci abituali. Nota: impostando 0 scatole, il farmaco non apparirà nell'elenco d'ordine. Questa opzione è ideale se vuoi usare l'app solo per le notifiche.")
                         HelpItem("Puoi impostare notifiche ricorrenti (es. ogni 8 ore) per non dimenticare le assunzioni.")
                         HelpItem("Il sistema ri-programma automaticamente la notifica successiva dopo ogni conferma.")
                     }
