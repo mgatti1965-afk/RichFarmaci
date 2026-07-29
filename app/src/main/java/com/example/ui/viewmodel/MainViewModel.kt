@@ -220,7 +220,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // Medication Manager Operations (Crud in configure panel)
-    fun addMedication(nome: String, scatole: Int, note: String, notificaAttiva: Boolean = false, orarioNotifica: String = "08:00", ripetiOgniOre: Int = 0) {
+    fun addMedication(nome: String, scatole: Int, note: String, notificaAttiva: Boolean = false, orarioNotifica: String = "08:00", frequenzaValore: Int = 0, frequenzaTipo: String = "ORE") {
         viewModelScope.launch {
             if (nome.isNotBlank()) {
                 val newMed = Medication(
@@ -231,7 +231,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     inPausa = false,
                     notificaAttiva = notificaAttiva,
                     orarioNotifica = orarioNotifica,
-                    ripetiOgniOre = ripetiOgniOre
+                    frequenzaValore = frequenzaValore,
+                    frequenzaTipo = frequenzaTipo
                 )
                 medicationRepository.insert(newMed)
                 

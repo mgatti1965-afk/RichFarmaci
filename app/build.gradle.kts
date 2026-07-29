@@ -23,6 +23,9 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    ksp {
+      arg("room.schemaLocation", "$projectDir/schemas")
+    }
   }
 
   signingConfigs {
@@ -64,6 +67,15 @@ android {
     buildConfig = true
   }
   testOptions { unitTests { isIncludeAndroidResources = true } }
+  sourceSets {
+    getByName("test") {
+      assets.srcDirs(file("$projectDir/schemas"))
+      resources.srcDirs(file("$projectDir/schemas"))
+    }
+    getByName("androidTest") {
+      assets.srcDirs(file("$projectDir/schemas"))
+    }
+  }
 }
 
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
@@ -102,6 +114,7 @@ dependencies {
   testImplementation(libs.androidx.junit)
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation(libs.androidx.room.testing)
   testImplementation(libs.robolectric)
   testImplementation(libs.roborazzi)
   testImplementation(libs.roborazzi.compose)
@@ -115,4 +128,15 @@ dependencies {
   debugImplementation(libs.androidx.compose.ui.tooling)
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
+}
+
+tasks.register<Copy>("copyRoomSchemasToTestAssets") {
+    from(file("$projectDir/schemas"))
+    into(file("$projectDir/src/test/assets"))
+}
+
+project.afterEvaluate {
+    tasks.named("preBuild") {
+        dependsOn("copyRoomSchemasToTestAssets")
+    }
 }

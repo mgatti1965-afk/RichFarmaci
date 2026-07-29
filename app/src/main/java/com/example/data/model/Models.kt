@@ -13,7 +13,8 @@ data class Medication(
     val inPausa: Boolean = false,
     val notificaAttiva: Boolean = false,
     val orarioNotifica: String = "08:00",
-    val ripetiOgniOre: Int = 0 // 0 means no repetition
+    val frequenzaValore: Int = 0, // 0 significa nessuna ripetizione
+    val frequenzaTipo: String = "ORE" // "ORE" o "GIORNI"
 )
 
 data class SentMedication(

@@ -12,10 +12,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -221,6 +218,7 @@ fun MainScreen(viewModel: MainViewModel) {
                                         med = med,
                                         isSelected = isSelected,
                                         requestedQuantity = quantity,
+                                        notificationsEnabled = settings.notificheAttive,
                                         onQuantityChange = { viewModel.updateSelection(med, it) }
                                     )
                                 }
@@ -319,6 +317,7 @@ fun MedicationItem(
     med: Medication,
     isSelected: Boolean,
     requestedQuantity: Int,
+    notificationsEnabled: Boolean,
     onQuantityChange: (Int) -> Unit
 ) {
     Card(
@@ -354,6 +353,25 @@ fun MedicationItem(
                         fontSize = 13.sp,
                         color = Slate600
                     )
+                }
+                if (notificationsEnabled && med.notificaAttiva) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                        Icon(
+                            Icons.Default.Notifications,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = GreenPrimary
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        val unit = if (med.frequenzaTipo == "ORE") "h" else "gg"
+                        val repeatText = if (med.frequenzaValore > 0) " (ogni ${med.frequenzaValore}$unit)" else ""
+                        Text(
+                            text = "Notifica: ${med.orarioNotifica}$repeatText",
+                            fontSize = 12.sp,
+                            color = GreenPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 
@@ -470,231 +488,61 @@ fun SettingsPanelContent(
     var nAttive by remember { mutableStateOf(settings.notificheAttive) }
     var nDesc by remember { mutableStateOf(settings.descrizioneNotifica) }
 
-    var showExitConfirmation by remember { mutableStateOf(false) }
+    var exitAttempted by remember { mutableStateOf(false) }
 
-    val hasChanges = pNome != settings.pazienteNome ||
-            pCf != settings.pazienteCf ||
-            mNome != settings.medicoNome ||
-            mTel != settings.medicoTelefono ||
-            mEmail != settings.medicoEmail ||
-            secInd != settings.secondoIndirizzo ||
-            msgTesta != settings.messaggioTesta ||
-            msgCoda != settings.messaggioCoda ||
-            valType != settings.tipoInvio ||
-            nAttive != settings.notificheAttive ||
-            nDesc != settings.descrizioneNotifica
+    val hasChanges = remember(settings, pNome, pCf, mNome, mTel, mEmail, secInd, msgTesta, msgCoda, valType, nAttive, nDesc) {
+        pNome != settings.pazienteNome ||
+        pCf != settings.pazienteCf ||
+        mNome != settings.medicoNome ||
+        mTel != settings.medicoTelefono ||
+        mEmail != settings.medicoEmail ||
+        secInd != settings.secondoIndirizzo ||
+        msgTesta != settings.messaggioTesta ||
+        msgCoda != settings.messaggioCoda ||
+        valType != settings.tipoInvio ||
+        nAttive != settings.notificheAttive ||
+        nDesc != settings.descrizioneNotifica
+    }
 
     BackHandler(enabled = hasChanges) {
-        showExitConfirmation = true
-    }
-
-    var dNome by remember { mutableStateOf("") }
-    var dScatole by remember { mutableIntStateOf(1) }
-    var dNote by remember { mutableStateOf("") }
-    var dNotifica by remember { mutableStateOf(false) }
-    var dOrario by remember { mutableStateOf("08:00") }
-    var dRipeti by remember { mutableIntStateOf(0) }
-
-    var showEditDialog by remember { mutableStateOf(false) }
-    var editMedicationId by remember { mutableStateOf("") }
-    var editMedicationName by remember { mutableStateOf("") }
-    var editMedicationBoxes by remember { mutableIntStateOf(1) }
-    var editMedicationNotes by remember { mutableStateOf("") }
-    var editMedicationNotifica by remember { mutableStateOf(false) }
-    var editMedicationOrario by remember { mutableStateOf("08:00") }
-    var editMedicationRipeti by remember { mutableIntStateOf(0) }
-
-    var showTimePicker by remember { mutableStateOf(false) }
-    var isEditingTimeForAdd by remember { mutableStateOf(true) }
-
-    if (showTimePicker) {
-        val initialTime = if (isEditingTimeForAdd) dOrario else editMedicationOrario
-        val parts = initialTime.split(":")
-        val initialHour = parts.getOrNull(0)?.toIntOrNull() ?: 8
-        val initialMinute = parts.getOrNull(1)?.toIntOrNull() ?: 0
-        
-        val tpState = rememberTimePickerState(
-            initialHour = initialHour,
-            initialMinute = initialMinute,
-            is24Hour = true
-        )
-        
-        TimePickerDialog(
-            onDismissRequest = { showTimePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    val formattedTime = String.format("%02d:%02d", tpState.hour, tpState.minute)
-                    if (isEditingTimeForAdd) dOrario = formattedTime else editMedicationOrario = formattedTime
-                    showTimePicker = false
-                }) {
-                    Text("OK", color = GreenPrimary, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) {
-                    Text("Annulla", color = Slate600)
-                }
-            }
-        ) {
-            TimePicker(state = tpState)
+        if (exitAttempted) {
+            onClose()
+        } else {
+            Toast.makeText(context, "Modifiche non salvate. Premi ancora per uscire.", Toast.LENGTH_LONG).show()
+            exitAttempted = true
         }
     }
 
-    if (showEditDialog) {
-        Dialog(onDismissRequest = { showEditDialog = false }) {
-            Card(
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                colors = CardDefaults.cardColors(containerColor = GrayBackground),
-                border = BorderStroke(1.2.dp, Slate900)
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Modifica Farmaco", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Slate900)
-                    
-                    OutlinedTextField(
-                        value = editMedicationName,
-                        onValueChange = { editMedicationName = it },
-                        label = { Text("Nome Farmaco", fontSize = 15.sp) },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Slate900,
-                            unfocusedBorderColor = GrayBorder,
-                            focusedLabelColor = Slate900,
-                            unfocusedLabelColor = Slate600,
-                            unfocusedContainerColor = White,
-                            focusedContainerColor = White
-                        ),
-                        shape = RoundedCornerShape(12.dp)
+    var showMedicationDialog by remember { mutableStateOf(false) }
+    var medicationToEdit by remember { mutableStateOf<Medication?>(null) }
+
+    if (showMedicationDialog) {
+        MedicationEditorDialog(
+            medication = medicationToEdit,
+            notificationsEnabled = nAttive,
+            onDismiss = { showMedicationDialog = false },
+            onSave = { updatedMed ->
+                if (medicationToEdit == null) {
+                    viewModel.addMedication(
+                        updatedMed.nome,
+                        updatedMed.scatole,
+                        updatedMed.note,
+                        updatedMed.notificaAttiva,
+                        updatedMed.orarioNotifica,
+                        updatedMed.frequenzaValore,
+                        updatedMed.frequenzaTipo
                     )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Scatole standard:", fontWeight = FontWeight.Bold, color = Slate600)
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            IconButton(
-                                onClick = { if (editMedicationBoxes > 1) editMedicationBoxes-- },
-                                modifier = Modifier.size(40.dp).background(Slate900, RoundedCornerShape(8.dp))
-                            ) {
-                                Text("−", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = White)
-                            }
-                            Text(text = editMedicationBoxes.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Slate900, modifier = Modifier.width(40.dp), textAlign = TextAlign.Center)
-                            IconButton(
-                                onClick = { editMedicationBoxes++ },
-                                modifier = Modifier.size(40.dp).background(GreenPrimary, RoundedCornerShape(8.dp))
-                            ) {
-                                Text("+", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = White)
-                            }
-                        }
-                    }
-
-                    OutlinedTextField(
-                        value = editMedicationNotes,
-                        onValueChange = { editMedicationNotes = it },
-                        label = { Text("Note aggiuntive", fontSize = 15.sp) },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Slate900,
-                            unfocusedBorderColor = GrayBorder,
-                            focusedLabelColor = Slate900,
-                            unfocusedLabelColor = Slate600,
-                            unfocusedContainerColor = White,
-                            focusedContainerColor = White
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    // Notifica Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.NotificationsActive, contentDescription = null, tint = if (editMedicationNotifica) GreenPrimary else Slate600, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Attiva Notifica", color = Slate900, fontWeight = FontWeight.Medium)
-                        }
-                        Switch(
-                            checked = editMedicationNotifica,
-                            onCheckedChange = { editMedicationNotifica = it },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = White,
-                                checkedTrackColor = GreenPrimary,
-                                uncheckedThumbColor = White,
-                                uncheckedTrackColor = GrayBorder
-                            )
-                        )
-                    }
-
-                    if (editMedicationNotifica) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("Orario:", fontWeight = FontWeight.Bold, color = Slate600)
-                            Surface(
-                                onClick = { isEditingTimeForAdd = false; showTimePicker = true },
-                                shape = RoundedCornerShape(8.dp),
-                                color = White,
-                                border = BorderStroke(1.dp, GrayBorder)
-                            ) {
-                                Text(editMedicationOrario, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), fontWeight = FontWeight.Bold, color = Slate900)
-                            }
-                        }
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("Ripeti ogni (ore):", fontWeight = FontWeight.Bold, color = Slate600)
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.background(GrayDarker, RoundedCornerShape(8.dp)).padding(2.dp)) {
-                                IconButton(onClick = { if (editMedicationRipeti > 0) editMedicationRipeti = if (editMedicationRipeti == 1) 0 else editMedicationRipeti - 1 }, modifier = Modifier.size(36.dp)) {
-                                    Text("−", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                                }
-                                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(50.dp)) {
-                                    Text(if (editMedicationRipeti == 0) "Mai" else "${editMedicationRipeti}h", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Slate900)
-                                }
-                                IconButton(onClick = { if (editMedicationRipeti < 12) editMedicationRipeti++ }, modifier = Modifier.size(36.dp)) {
-                                    Text("+", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = GreenPrimary)
-                                }
-                            }
-                        }
-                    }
-
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = { showEditDialog = false }) { Text("Annulla") }
-                        Button(
-                            onClick = {
-                                viewModel.updateMedication(Medication(id = editMedicationId, nome = editMedicationName, scatole = editMedicationBoxes, note = editMedicationNotes, notificaAttiva = editMedicationNotifica, orarioNotifica = editMedicationOrario, ripetiOgniOre = editMedicationRipeti))
-                                showEditDialog = false
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
-                        ) { Text("Salva", color = White) }
-                    }
+                    Toast.makeText(context, "Farmaco aggiunto!", Toast.LENGTH_SHORT).show()
+                } else {
+                    viewModel.updateMedication(updatedMed)
+                    Toast.makeText(context, "Farmaco aggiornato!", Toast.LENGTH_SHORT).show()
                 }
+                showMedicationDialog = false
             }
-        }
-    }
-
-    if (showExitConfirmation) {
-        AlertDialog(
-            onDismissRequest = { showExitConfirmation = false },
-            title = { Text("Modifiche non salvate", fontWeight = FontWeight.Bold, color = Slate900) },
-            text = { Text("Ci sono delle modifiche non salvate. Vuoi uscire comunque senza salvare?") },
-            confirmButton = {
-                TextButton(onClick = onClose) { Text("Esci senza salvare", color = Color.Red) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showExitConfirmation = false }) { Text("Rimani qui") }
-            },
-            containerColor = GrayBackground
         )
     }
+
+
 
     val pickContactLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
@@ -759,7 +607,17 @@ fun SettingsPanelContent(
                     IconButton(onClick = { showHelp = true }, modifier = Modifier.background(GrayBackground, CircleShape)) {
                         Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = "Aiuto", tint = Slate900)
                     }
-                    IconButton(onClick = { if (hasChanges) showExitConfirmation = true else onClose() }, modifier = Modifier.background(GrayBackground, CircleShape)) {
+                    IconButton(
+                        onClick = { 
+                            if (hasChanges && !exitAttempted) {
+                                Toast.makeText(context, "Modifiche non salvate. Premi ancora per uscire.", Toast.LENGTH_LONG).show()
+                                exitAttempted = true
+                            } else {
+                                onClose()
+                            }
+                        }, 
+                        modifier = Modifier.background(GrayBackground, CircleShape)
+                    ) {
                         Icon(Icons.Default.Close, contentDescription = "Chiudi", tint = Slate900)
                     }
                 }
@@ -855,8 +713,8 @@ fun SettingsPanelContent(
                             viewModel.savePatientSettings(PatientSettings(pazienteNome = pNome, pazienteCf = pCf, medicoNome = mNome, medicoTelefono = mTel, medicoEmail = mEmail, secondoIndirizzo = secInd, messaggioTesta = msgTesta, messaggioCoda = msgCoda, tipoInvio = valType, notificheAttive = nAttive, descrizioneNotifica = nDesc))
                             Toast.makeText(context, "Profilo salvato!", Toast.LENGTH_SHORT).show()
                             onClose()
-                        } else Toast.makeText(context, "Riempi i campi obbligatori.", Toast.LENGTH_LONG).show()
-                    }, modifier = Modifier.fillMaxWidth().height(60.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.Red), shape = RoundedCornerShape(16.dp), enabled = formsFilled) {
+                        } else Toast.makeText(context, "Riempi i campi obbligatori (Nome, CF, Medico e Recapito).", Toast.LENGTH_LONG).show()
+                    }, modifier = Modifier.fillMaxWidth().height(60.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.Red), shape = RoundedCornerShape(16.dp)) {
                         Text("SALVA CONFIGURAZIONE", fontWeight = FontWeight.Bold, color = White)
                     }
                 }
@@ -867,63 +725,18 @@ fun SettingsPanelContent(
                 Text(text = "3. Gestore Rubrica Farmaci", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900, modifier = Modifier.padding(top = 10.dp))
             }
             item {
-                Card(shape = RoundedCornerShape(12.dp), border = BorderStroke(1.2.dp, Slate900), colors = CardDefaults.cardColors(containerColor = GrayDarker), modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("Registra Nuovo Farmaco:", fontWeight = FontWeight.Bold, color = Slate900)
-                        OutlinedTextField(value = dNome, onValueChange = { dNome = it }, label = { Text("Nome Farmaco") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White), shape = RoundedCornerShape(12.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text("Scatole standard:", fontWeight = FontWeight.Bold, color = Slate600)
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                IconButton(onClick = { if (dScatole > 1) dScatole-- }, modifier = Modifier.size(44.dp).background(Slate900, RoundedCornerShape(8.dp))) { Text("−", fontSize = 24.sp, color = White) }
-                                Text(dScatole.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(44.dp), textAlign = TextAlign.Center)
-                                IconButton(onClick = { dScatole++ }, modifier = Modifier.size(44.dp).background(GreenPrimary, RoundedCornerShape(8.dp))) { Text("+", fontSize = 24.sp, color = White) }
-                            }
-                        }
-                        OutlinedTextField(value = dNote, onValueChange = { dNote = it }, label = { Text("Note (Opzionale)") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White), shape = RoundedCornerShape(12.dp))
-                        
-                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Checkbox(checked = dNotifica, onCheckedChange = { dNotifica = it }, colors = CheckboxDefaults.colors(checkedColor = GreenPrimary))
-                                Text("Promemoria", fontWeight = FontWeight.Bold, color = Slate900)
-                            }
-                            if (dNotifica) {
-                                Surface(
-                                    onClick = { isEditingTimeForAdd = true; showTimePicker = true },
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = White,
-                                    border = BorderStroke(1.dp, GrayBorder)
-                                ) {
-                                    Text(dOrario, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), fontWeight = FontWeight.Bold, color = Slate900)
-                                }
-                            }
-                        }
-                        
-                        if (dNotifica) {
-                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Ripeti ogni (ore):", fontSize = 14.sp, color = Slate600)
-                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.background(White, RoundedCornerShape(8.dp)).border(1.dp, GrayBorder, RoundedCornerShape(8.dp)).padding(2.dp)) {
-                                    IconButton(onClick = { if (dRipeti > 0) dRipeti = if (dRipeti == 1) 0 else dRipeti - 1 }, modifier = Modifier.size(32.dp)) {
-                                        Text("−", fontWeight = FontWeight.Bold)
-                                    }
-                                    Text(if (dRipeti == 0) "Mai" else "${dRipeti}h", fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(40.dp), textAlign = TextAlign.Center)
-                                    IconButton(onClick = { if (dRipeti < 12) dRipeti++ }, modifier = Modifier.size(32.dp)) {
-                                        Text("+", fontWeight = FontWeight.Bold, color = GreenPrimary)
-                                    }
-                                }
-                            }
-                        }
-
-                        Button(onClick = {
-                            if (dNome.isNotBlank()) {
-                                viewModel.addMedication(dNome, dScatole, dNote, dNotifica, dOrario, dRipeti)
-                                dNome = ""; dScatole = 1; dNote = ""; dNotifica = false; dOrario = "08:00"; dRipeti = 0
-                                Toast.makeText(context, "Aggiunto!", Toast.LENGTH_SHORT).show()
-                            } else Toast.makeText(context, "Nome obbligatorio!", Toast.LENGTH_SHORT).show()
-                        }, colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth().height(52.dp)) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Text("AGGIUNGI ALLA RUBRICA", fontWeight = FontWeight.Bold)
-                        }
-                    }
+                Button(
+                    onClick = {
+                        medicationToEdit = null
+                        showMedicationDialog = true
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Slate900),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, tint = White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("AGGIUNGI NUOVO FARMACO", fontWeight = FontWeight.Bold, color = White)
                 }
             }
             item { Text("I Tuoi Farmaci Salvati:", fontWeight = FontWeight.Bold, color = Slate900, modifier = Modifier.padding(top = 8.dp)) }
@@ -933,12 +746,10 @@ fun SettingsPanelContent(
                 items(medications, key = { it.id }) { med ->
                     ConfigurationMedicationRow(
                         med = med,
+                        notificationsEnabled = settings.notificheAttive,
                         onEdit = {
-                            editMedicationId = med.id; editMedicationName = med.nome
-                            editMedicationBoxes = med.scatole; editMedicationNotes = med.note
-                            editMedicationNotifica = med.notificaAttiva; editMedicationOrario = med.orarioNotifica
-                            editMedicationRipeti = med.ripetiOgniOre
-                            showEditDialog = true
+                            medicationToEdit = med
+                            showMedicationDialog = true
                         },
                         onToggleStandby = { viewModel.toggleMedicationStandby(med) },
                         onDelete = { viewModel.deleteMedication(med) }
@@ -953,6 +764,7 @@ fun SettingsPanelContent(
 @Composable
 fun ConfigurationMedicationRow(
     med: Medication,
+    notificationsEnabled: Boolean,
     onEdit: () -> Unit,
     onToggleStandby: () -> Unit,
     onDelete: () -> Unit
@@ -967,8 +779,8 @@ fun ConfigurationMedicationRow(
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = med.nome, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = if (med.inPausa) Slate600 else Slate900, modifier = Modifier.alpha(if (med.inPausa) 0.8f else 1f))
                 if (med.note.isNotBlank()) Text(text = med.note, fontSize = 13.sp, color = Slate600, modifier = Modifier.alpha(if (med.inPausa) 0.8f else 1f))
-                Text(text = "Quantità standard: ${med.scatole}", fontSize = 13.sp, color = Slate600, modifier = Modifier.alpha(if (med.inPausa) 0.8f else 1f))
-                if (med.notificaAttiva) {
+                Text(text = "N. scatole: ${med.scatole}", fontSize = 13.sp, color = Slate600, modifier = Modifier.alpha(if (med.inPausa) 0.8f else 1f))
+                if (notificationsEnabled && med.notificaAttiva) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.Default.Notifications,
@@ -977,7 +789,8 @@ fun ConfigurationMedicationRow(
                             tint = GreenPrimary
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        val repeatText = if (med.ripetiOgniOre > 0) " (ogni ${med.ripetiOgniOre}h)" else ""
+                        val unit = if (med.frequenzaTipo == "ORE") "h" else "gg"
+                        val repeatText = if (med.frequenzaValore > 0) " (ogni ${med.frequenzaValore}$unit)" else ""
                         Text(text = "Notifica: ${med.orarioNotifica}$repeatText", fontSize = 12.sp, color = GreenPrimary, fontWeight = FontWeight.Bold)
                     }
                 }
@@ -988,6 +801,311 @@ fun ConfigurationMedicationRow(
                 }
                 IconButton(onClick = onDelete, modifier = Modifier.size(44.dp).background(Color(0xFFFEE2E2), CircleShape)) {
                     Icon(Icons.Default.Delete, contentDescription = "Elimina", tint = Color.Red)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MedicationEditorDialog(
+    medication: Medication? = null,
+    onDismiss: () -> Unit,
+    onSave: (Medication) -> Unit,
+    notificationsEnabled: Boolean
+) {
+    val context = LocalContext.current
+    var nome by remember { mutableStateOf(medication?.nome ?: "") }
+    var scatole by remember { mutableIntStateOf(medication?.scatole ?: 1) }
+    var note by remember { mutableStateOf(medication?.note ?: "") }
+    var notificaAttiva by remember { mutableStateOf(medication?.notificaAttiva ?: false) }
+    var orarioNotifica by remember { mutableStateOf(medication?.orarioNotifica ?: "08:00") }
+    var frequenzaValore by remember { mutableIntStateOf(medication?.frequenzaValore ?: 0) }
+    var frequenzaTipo by remember { mutableStateOf(medication?.frequenzaTipo ?: "ORE") }
+
+    var exitAttempted by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val hasChanges = remember(medication, nome, scatole, note, notificaAttiva, orarioNotifica, frequenzaValore, frequenzaTipo) {
+        if (medication == null) {
+            nome.isNotBlank() || scatole != 1 || note.isNotBlank() || notificaAttiva || orarioNotifica != "08:00" || frequenzaValore != 0
+        } else {
+            nome != medication.nome ||
+                    scatole != medication.scatole ||
+                    note != medication.note ||
+                    notificaAttiva != medication.notificaAttiva ||
+                    orarioNotifica != medication.orarioNotifica ||
+                    frequenzaValore != medication.frequenzaValore ||
+                    frequenzaTipo != medication.frequenzaTipo
+        }
+    }
+
+    val handleDismiss = {
+        if (hasChanges && !exitAttempted) {
+            Toast.makeText(context, "Modifiche non salvate. Premi ancora la 'X' per uscire.", Toast.LENGTH_LONG).show()
+            exitAttempted = true
+        } else {
+            onDismiss()
+        }
+    }
+
+    if (showTimePicker) {
+        val parts = orarioNotifica.split(":")
+        val initialHour = parts.getOrNull(0)?.toIntOrNull() ?: 8
+        val initialMinute = parts.getOrNull(1)?.toIntOrNull() ?: 0
+
+        val tpState = rememberTimePickerState(
+            initialHour = initialHour,
+            initialMinute = initialMinute,
+            is24Hour = true
+        )
+
+        TimePickerDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    orarioNotifica = String.format("%02d:%02d", tpState.hour, tpState.minute)
+                    showTimePicker = false
+                }) {
+                    Text("OK", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Annulla", color = Slate600)
+                }
+            }
+        ) {
+            TimePicker(state = tpState)
+        }
+    }
+
+    Dialog(onDismissRequest = handleDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = CardDefaults.cardColors(containerColor = GrayBackground),
+            border = BorderStroke(1.dp, GrayBorder)
+        ) {
+            val scrollState = rememberScrollState()
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (medication == null) "Aggiungi Farmaco" else "Modifica Farmaco",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Slate900
+                    )
+                    IconButton(
+                        onClick = handleDismiss,
+                        modifier = Modifier.background(GrayDarker, CircleShape).size(32.dp)
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "Chiudi", tint = Slate900, modifier = Modifier.size(20.dp))
+                    }
+                }
+
+                OutlinedTextField(
+                    value = nome,
+                    onValueChange = { nome = it },
+                    label = { Text("Nome Farmaco") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Slate900,
+                        unfocusedBorderColor = GrayBorder,
+                        focusedLabelColor = Slate900,
+                        unfocusedLabelColor = Slate600,
+                        unfocusedContainerColor = White,
+                        focusedContainerColor = White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("N. scatole:", fontWeight = FontWeight.Bold, color = Slate600)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IconButton(
+                            onClick = { if (scatole > 1) scatole-- },
+                            modifier = Modifier.size(36.dp).background(Slate900, RoundedCornerShape(8.dp))
+                        ) {
+                            Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = White)
+                        }
+                        Text(
+                            text = scatole.toString(),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Slate900,
+                            modifier = Modifier.width(32.dp),
+                            textAlign = TextAlign.Center
+                        )
+                        IconButton(
+                            onClick = { scatole++ },
+                            modifier = Modifier.size(36.dp).background(GreenPrimary, RoundedCornerShape(8.dp))
+                        ) {
+                            Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = White)
+                        }
+                    }
+                }
+
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    label = { Text("Note (es: dopo i pasti)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Slate900,
+                        unfocusedBorderColor = GrayBorder,
+                        focusedLabelColor = Slate900,
+                        unfocusedLabelColor = Slate600,
+                        unfocusedContainerColor = White,
+                        focusedContainerColor = White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                if (notificationsEnabled) {
+                    HorizontalDivider(color = GrayBorder.copy(alpha = 0.5f))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = notificaAttiva,
+                            onCheckedChange = { notificaAttiva = it },
+                            colors = CheckboxDefaults.colors(checkedColor = GreenPrimary)
+                        )
+                        Text("Attiva Notifica", fontWeight = FontWeight.Bold, color = Slate900)
+                    }
+
+                    if (notificaAttiva) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text("Orario:", fontSize = 14.sp, color = Slate600)
+                                Surface(
+                                    onClick = { showTimePicker = true },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = White,
+                                    border = BorderStroke(1.dp, GrayBorder)
+                                ) {
+                                    Text(
+                                        orarioNotifica,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                        fontWeight = FontWeight.Bold,
+                                        color = Slate900
+                                    )
+                                }
+                            }
+
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text("Ripetizione:", fontSize = 14.sp, color = Slate600)
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .background(White, RoundedCornerShape(8.dp))
+                                            .border(1.dp, GrayBorder, RoundedCornerShape(8.dp))
+                                    ) {
+                                        IconButton(
+                                            onClick = { if (frequenzaValore > 0) frequenzaValore-- },
+                                            modifier = Modifier.size(32.dp)
+                                        ) {
+                                            Text("−", fontWeight = FontWeight.Bold)
+                                        }
+                                        Text(
+                                            text = if (frequenzaValore == 0) "0" else frequenzaValore.toString(),
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.width(28.dp),
+                                            textAlign = TextAlign.Center
+                                        )
+                                        IconButton(
+                                            onClick = { frequenzaValore++ },
+                                            modifier = Modifier.size(32.dp)
+                                        ) {
+                                            Text("+", fontWeight = FontWeight.Bold, color = GreenPrimary)
+                                        }
+                                    }
+                                    
+                                    if (frequenzaValore == 0) {
+                                        Text("Nessuna ripetizione", fontSize = 14.sp, color = Slate600, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                                    } else {
+                                        Row(
+                                            modifier = Modifier
+                                                .background(White, RoundedCornerShape(8.dp))
+                                                .border(1.dp, GrayBorder, RoundedCornerShape(8.dp))
+                                        ) {
+                                            listOf("ORE", "GIORNI").forEach { tipo ->
+                                                val selected = frequenzaTipo == tipo
+                                                Surface(
+                                                    modifier = Modifier
+                                                        .clickable { frequenzaTipo = tipo }
+                                                        .width(50.dp),
+                                                    color = if (selected) GreenPrimary else Color.Transparent,
+                                                    shape = RoundedCornerShape(8.dp)
+                                                ) {
+                                                    Text(
+                                                        text = if (tipo == "ORE") "Ore" else "GG",
+                                                        modifier = Modifier.padding(vertical = 8.dp),
+                                                        color = if (selected) White else Slate600,
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        textAlign = TextAlign.Center
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        if (nome.isNotBlank()) {
+                            onSave(
+                                (medication ?: Medication(nome = nome)).copy(
+                                    nome = nome.trim(),
+                                    scatole = scatole,
+                                    note = note.trim(),
+                                    notificaAttiva = notificaAttiva,
+                                    orarioNotifica = orarioNotifica,
+                                    frequenzaValore = frequenzaValore,
+                                    frequenzaTipo = frequenzaTipo
+                                )
+                            )
+                        } else {
+                            Toast.makeText(context, "Il nome è obbligatorio", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("SALVA", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }
@@ -1012,7 +1130,7 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                         HelpItem("Seleziona i farmaci cliccando sul loro nome.")
                         HelpItem("Regola il numero di scatole con i tasti + e -.")
                         HelpItem("Premi 'INVIA AL MEDICO' per inviare la richiesta.")
-                        HelpItem("Riceverai notifiche di promemoria negli orari impostati.")
+                        HelpItem("Riceverai notifiche negli orari impostati.")
                     }
                     "cronologia" -> {
                         HelpItem("Qui trovi lo storico delle richieste inviate.")
@@ -1022,7 +1140,7 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                     "configurazione" -> {
                         HelpItem("Inserisci il tuo Codice Fiscale per permettere al medico di emettere la ricetta elettronica.")
                         HelpItem("Usa il tasto 'Scegli' per importare i dati del medico direttamente dalla tua rubrica telefonica.")
-                        HelpItem("Aggiungi i farmaci che usi abitualmente con le loro quantità standard.")
+                        HelpItem("Aggiungi i farmaci che usi abitualmente con il loro N. scatole.")
                         HelpItem("Puoi impostare notifiche ricorrenti (es. ogni 8 ore) per non dimenticare le assunzioni.")
                         HelpItem("Il sistema ri-programma automaticamente la notifica successiva dopo ogni conferma.")
                     }

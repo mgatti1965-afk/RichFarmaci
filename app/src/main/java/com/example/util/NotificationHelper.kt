@@ -46,13 +46,21 @@ object NotificationHelper {
         val currentTime = System.currentTimeMillis()
         var scheduleTime = calendar.timeInMillis
 
-        // Se l'orario base è passato, cerchiamo la prossima ripetizione oggi o domani
+        // Se l'orario base è passato, cerchiamo la prossima ripetizione oggi o domani/futuro
         if (scheduleTime <= currentTime) {
-            if (medication.ripetiOgniOre > 0) {
-                // Calcoliamo quante ripetizioni servono per arrivare al futuro
-                while (scheduleTime <= currentTime) {
-                    calendar.add(Calendar.HOUR_OF_DAY, medication.ripetiOgniOre)
-                    scheduleTime = calendar.timeInMillis
+            if (medication.frequenzaValore > 0) {
+                if (medication.frequenzaTipo == "ORE") {
+                    // Calcoliamo quante ripetizioni servono per arrivare al futuro (in ore)
+                    while (scheduleTime <= currentTime) {
+                        calendar.add(Calendar.HOUR_OF_DAY, medication.frequenzaValore)
+                        scheduleTime = calendar.timeInMillis
+                    }
+                } else {
+                    // Calcoliamo quante ripetizioni servono per arrivare al futuro (in giorni)
+                    while (scheduleTime <= currentTime) {
+                        calendar.add(Calendar.DAY_OF_YEAR, medication.frequenzaValore)
+                        scheduleTime = calendar.timeInMillis
+                    }
                 }
             } else {
                 // Nessuna ripetizione, programma per domani alla stessa ora
