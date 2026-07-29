@@ -20,3 +20,4 @@ val SandAlertBg = Color(0xFFFEF3C7) // soft yellow for warnings
 val White = Color(0xFFFFFFFF)
 val GrayBackground = Color(0xFFF8FAFC)
 val GrayBorder = Color(0xFFCBD5E1)
+val GrayDarker = Color(0xFFE2E8F0)
