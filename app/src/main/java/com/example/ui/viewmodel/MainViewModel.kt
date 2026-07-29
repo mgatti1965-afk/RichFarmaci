@@ -303,14 +303,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Generate formatted text message for request
     fun buildFormattedMessage(): String {
         val currentProfile = _settings.value
-        val sb = StringBuilder()
+        val sections = mutableListOf<String>()
 
-        sb.append(currentProfile.messaggioTesta).append("\n\n")
+        // 1. Frase di testa
+        if (currentProfile.messaggioTesta.isNotBlank()) {
+            sections.add(currentProfile.messaggioTesta.trim())
+        }
 
+        // 2. Lista farmaci con doppio a capo tra uno e l'altro
         val listMedications = medications.value
         val selectedIds = _selectedMedicationIds.value
-
-        listMedications.filter { selectedIds.contains(it.id) }.forEach { med ->
+        val medsList = listMedications.filter { selectedIds.contains(it.id) }.map { med ->
             val qty = _selectedQuantities.value[med.id] ?: med.scatole
             val tempNote = _selectedNotes.value[med.id] ?: ""
             // Standard static medicine notes
@@ -324,22 +327,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             val scatolaWord = if (qty == 1) "scatola" else "scatole"
-            sb.append("- ${med.nome}: $qty $scatolaWord$noteStr\n\n")
+            "- ${med.nome}: $qty $scatolaWord$noteStr"
         }
 
-        sb.append("\n")
-        sb.append("Nome Paziente: ${currentProfile.pazienteNome}\n")
-        sb.append("Codice Fiscale: ${currentProfile.pazienteCf.uppercase()}\n")
+        if (medsList.isNotEmpty()) {
+            sections.add(medsList.joinToString("\n\n"))
+        }
+
+        // 3. Dati Paziente e recapito
+        val footerParts = mutableListOf<String>()
+        footerParts.add("Nome Paziente: ${currentProfile.pazienteNome}")
+        footerParts.add("Codice Fiscale: ${currentProfile.pazienteCf.uppercase()}")
+
         if (currentProfile.secondoIndirizzo.isNotBlank()) {
-            sb.append("Note di Recapito: ${currentProfile.secondoIndirizzo}\n")
+            footerParts.add("Note di Recapito: ${currentProfile.secondoIndirizzo}")
         }
+
         if (currentProfile.tipoInvio == 2 && currentProfile.medicoEmail.isNotBlank()) {
-            sb.append("\nInviato via Email a: ${currentProfile.medicoEmail}\n")
+            footerParts.add("Inviato via Email a: ${currentProfile.medicoEmail}")
         }
 
-        sb.append("\n").append(currentProfile.messaggioCoda)
+        sections.add(footerParts.joinToString("\n"))
 
-        return sb.toString()
+        // 4. Frase di coda
+        if (currentProfile.messaggioCoda.isNotBlank()) {
+            sections.add(currentProfile.messaggioCoda.trim())
+        }
+
+        // Unisce tutto con doppio a capo tra le sezioni principali
+        return sections.joinToString("\n\n")
     }
 
     // Logs the sent request into database history

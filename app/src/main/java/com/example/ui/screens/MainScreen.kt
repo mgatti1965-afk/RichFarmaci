@@ -643,7 +643,7 @@ fun SettingsPanelContent(
                         Button(onClick = {
                             if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) pickContactLauncher.launch(null)
                             else permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                        }, colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)) { Text("Scegli") }
+                        }, colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)) { Text("SCEGLI") }
                     }
                 }
             }
@@ -715,7 +715,7 @@ fun SettingsPanelContent(
                             onClose()
                         } else Toast.makeText(context, "Riempi i campi obbligatori (Nome, CF, Medico e Recapito).", Toast.LENGTH_LONG).show()
                     }, modifier = Modifier.fillMaxWidth().height(60.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.Red), shape = RoundedCornerShape(16.dp)) {
-                        Text("Salva Configurazione", fontWeight = FontWeight.Bold, color = White)
+                        Text("SALVA CONFIGURAZIONE", fontWeight = FontWeight.Bold, color = White)
                     }
                 }
             }
