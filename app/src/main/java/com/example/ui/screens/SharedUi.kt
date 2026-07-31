@@ -42,22 +42,22 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 when(type) {
                     "richiesta" -> {
+                        HelpItem("Scegli il paziente tramite la barra azzurra in alto (se ne gestisci più di uno).")
                         HelpItem("Seleziona i farmaci cliccando sul loro nome.")
                         HelpItem("Regola il numero di scatole con i tasti + e -.")
-                        HelpItem("Premi 'Invia al Medico' per inviare la richiesta.")
-                        HelpItem("Riceverai notifiche negli orari impostati.")
+                        HelpItem("Premi 'Invia al Medico' per trasmettere l'ordine.")
                     }
                     "cronologia" -> {
-                        HelpItem("Qui trovi lo storico delle richieste inviate.")
-                        HelpItem("Usa 'Visualizza' per leggere il testo completo.")
-                        HelpItem("Puoi eliminare vecchie richieste con l'icona cestino.")
+                        HelpItem("Seleziona il paziente tramite la barra azzurra in alto per vederne lo storico specifico.")
+                        HelpItem("Usa 'Visualizza' per leggere il testo completo del messaggio inviato.")
+                        HelpItem("Puoi eliminare le vecchie richieste usando l'icona del cestino.")
                     }
                     "configurazione" -> {
-                        HelpItem("Inserisci il tuo Codice Fiscale per permettere al medico di emettere la ricetta elettronica.")
-                        HelpItem("Usa il tasto 'Scegli' per importare i dati del medico direttamente dalla tua rubrica telefonica.")
-                        HelpItem("Aggiungi i farmaci abituali. Nota: impostando 0 scatole, il farmaco non apparirà nell'elenco d'ordine. Questa opzione è ideale se vuoi usare l'app solo per le notifiche.")
-                        HelpItem("Puoi impostare notifiche ricorrenti (es. ogni 8 ore) per non dimenticare le assunzioni.")
-                        HelpItem("Il sistema ri-programma automaticamente la notifica successiva dopo ogni conferma.")
+                        HelpItem("Usa la barra azzurra superiore per aggiungere nuovi pazienti o eliminare quelli esistenti.")
+                        HelpItem("Inserisci il Codice Fiscale del paziente selezionato per la ricetta elettronica.")
+                        HelpItem("Configura i dati del medico (puoi importarli dalla rubrica con il tasto 'Scegli').")
+                        HelpItem("Aggiungi i farmaci abituali (se imposti 0 scatole, il farmaco rimarrà in lista solo per le notifiche).")
+                        HelpItem("Attiva le notifiche per ricordarti di assumere i farmaci.")
                     }
                 }
             }
@@ -87,7 +87,7 @@ fun ProfileContextSwitcher(
             onClick = { expanded = true },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            color = White,
+            color = BlueInputBg,
             border = BorderStroke(1.dp, GrayBorder),
             shadowElevation = 1.dp
         ) {
@@ -99,20 +99,6 @@ fun ProfileContextSwitcher(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(if (activeProfile != null) GreenPrimary else GrayBorder, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = activeProfile?.pazienteNome?.take(1)?.uppercase() ?: "?",
-                            color = White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = activeProfile?.pazienteNome ?: "Seleziona Profilo",
@@ -122,13 +108,6 @@ fun ProfileContextSwitcher(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        if (activeProfile != null) {
-                            Text(
-                                text = activeProfile.pazienteCf,
-                                fontSize = 12.sp,
-                                color = Slate600
-                            )
-                        }
                     }
                 }
                 Icon(

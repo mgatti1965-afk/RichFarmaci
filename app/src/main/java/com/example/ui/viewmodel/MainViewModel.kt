@@ -111,14 +111,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             migrateFromSharedPreferencesIfNeeded()
             
-            // Auto-select first profile if none selected
-            if (_activeProfileId.value == null) {
-                val currentProfiles = db.profileDao().getAllProfilesSnapshot()
-                if (currentProfiles.isNotEmpty()) {
-                    selectProfile(currentProfiles.first().id)
-                }
-            } else {
-                refreshActiveProfile()
+            // Select first profile on startup
+            val currentProfiles = db.profileDao().getAllProfilesSnapshot()
+            if (currentProfiles.isNotEmpty()) {
+                selectProfile(currentProfiles.first().id)
             }
             
             updateConfigStatus()

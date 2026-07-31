@@ -87,7 +87,7 @@ fun MainScreen(viewModel: MainViewModel) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(White)
+                        .background(GrayBackground)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -127,7 +127,7 @@ fun MainScreen(viewModel: MainViewModel) {
 
                 TabRow(
                     selectedTabIndex = currentTab,
-                    containerColor = White,
+                    containerColor = GrayBackground,
                     contentColor = GreenPrimary,
                     indicator = { tabPositions ->
                         TabRowDefaults.SecondaryIndicator(
@@ -285,6 +285,14 @@ fun MainScreen(viewModel: MainViewModel) {
                     label = { Text("Nome Paziente") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Slate900,
+                        unfocusedBorderColor = GrayBorder,
+                        focusedLabelColor = Slate900,
+                        unfocusedLabelColor = Slate600,
+                        unfocusedContainerColor = BlueInputBg,
+                        focusedContainerColor = BlueInputBg
+                    ),
                     shape = RoundedCornerShape(12.dp)
                 )
             },

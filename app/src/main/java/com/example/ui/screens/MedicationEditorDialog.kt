@@ -146,8 +146,8 @@ fun MedicationEditorDialog(
                         unfocusedBorderColor = GrayBorder,
                         focusedLabelColor = Slate900,
                         unfocusedLabelColor = Slate600,
-                        unfocusedContainerColor = White,
-                        focusedContainerColor = White
+                        unfocusedContainerColor = BlueInputBg,
+                        focusedContainerColor = BlueInputBg
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -192,8 +192,8 @@ fun MedicationEditorDialog(
                         unfocusedBorderColor = GrayBorder,
                         focusedLabelColor = Slate900,
                         unfocusedLabelColor = Slate600,
-                        unfocusedContainerColor = White,
-                        focusedContainerColor = White
+                        unfocusedContainerColor = BlueInputBg,
+                        focusedContainerColor = BlueInputBg
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
