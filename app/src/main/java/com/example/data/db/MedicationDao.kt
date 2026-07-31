@@ -11,10 +11,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MedicationDao {
-    @Query("SELECT * FROM medications ORDER BY nome ASC")
-    fun getAllMedications(): Flow<List<Medication>>
+    @Query("SELECT * FROM medications WHERE profileId = :profileId ORDER BY nome ASC")
+    fun getMedicationsByProfile(profileId: String): Flow<List<Medication>>
 
-    @Query("SELECT * FROM medications ORDER BY nome ASC")
+    @Query("SELECT * FROM medications WHERE profileId = :profileId ORDER BY nome ASC")
+    suspend fun getMedicationsSnapshotByProfile(profileId: String): List<Medication>
+
+    @Query("SELECT * FROM medications")
     suspend fun getAllMedicationsSnapshot(): List<Medication>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

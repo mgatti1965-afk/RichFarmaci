@@ -5,7 +5,8 @@ import com.example.data.model.SentRequest
 import kotlinx.coroutines.flow.Flow
 
 class SentRequestRepository(private val sentRequestDao: SentRequestDao) {
-    val allSentRequests: Flow<List<SentRequest>> = sentRequestDao.getAllSentRequests()
+    fun getSentRequestsByProfile(profileId: String): Flow<List<SentRequest>> = 
+        sentRequestDao.getSentRequestsByProfile(profileId)
 
     suspend fun insert(sentRequest: SentRequest) {
         sentRequestDao.insert(sentRequest)

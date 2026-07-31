@@ -46,25 +46,29 @@ fun SettingsPanelContent(
     onClose: () -> Unit
 ) {
     val context = LocalContext.current
+    val profiles by viewModel.profiles.collectAsState()
+    val activeProfile by viewModel.activeProfile.collectAsState()
+    var showAddProfileDialog by remember { mutableStateOf(false) }
+    var newProfileName by remember { mutableStateOf("") }
     var showHelp by remember { mutableStateOf(false) }
 
     if (showHelp) {
         HelpDialog(type = "configurazione", onDismiss = { showHelp = false })
     }
 
-    var pNome by remember { mutableStateOf(settings.pazienteNome) }
-    var pCf by remember { mutableStateOf(settings.pazienteCf) }
-    var mNome by remember { mutableStateOf(settings.medicoNome) }
-    var mTel by remember { mutableStateOf(settings.medicoTelefono) }
-    var mEmail by remember { mutableStateOf(settings.medicoEmail) }
-    var secInd by remember { mutableStateOf(settings.secondoIndirizzo) }
-    var msgTesta by remember { mutableStateOf(settings.messaggioTesta) }
-    var msgCoda by remember { mutableStateOf(settings.messaggioCoda) }
-    var valType by remember { mutableIntStateOf(settings.tipoInvio) }
-    var nAttive by remember { mutableStateOf(settings.notificheAttive) }
-    var nDesc by remember { mutableStateOf(settings.descrizioneNotifica) }
+    var pNome by remember(settings) { mutableStateOf(settings.pazienteNome) }
+    var pCf by remember(settings) { mutableStateOf(settings.pazienteCf) }
+    var mNome by remember(settings) { mutableStateOf(settings.medicoNome) }
+    var mTel by remember(settings) { mutableStateOf(settings.medicoTelefono) }
+    var mEmail by remember(settings) { mutableStateOf(settings.medicoEmail) }
+    var secInd by remember(settings) { mutableStateOf(settings.secondoIndirizzo) }
+    var msgTesta by remember(settings) { mutableStateOf(settings.messaggioTesta) }
+    var msgCoda by remember(settings) { mutableStateOf(settings.messaggioCoda) }
+    var valType by remember(settings) { mutableIntStateOf(settings.tipoInvio) }
+    var nAttive by remember(settings) { mutableStateOf(settings.notificheAttive) }
+    var nDesc by remember(settings) { mutableStateOf(settings.descrizioneNotifica) }
 
-    var exitAttempted by remember { mutableStateOf(false) }
+    var exitAttempted by remember(settings) { mutableStateOf(false) }
 
     val hasChanges = remember(settings, pNome, pCf, mNome, mTel, mEmail, secInd, msgTesta, msgCoda, valType, nAttive, nDesc) {
         pNome != settings.pazienteNome ||
@@ -91,9 +95,11 @@ fun SettingsPanelContent(
 
     var showMedicationDialog by remember { mutableStateOf(false) }
     var medicationToEdit by remember { mutableStateOf<Medication?>(null) }
+    val profileId by viewModel.activeProfileId.collectAsState()
 
     if (showMedicationDialog) {
         MedicationEditorDialog(
+            profileId = profileId ?: "",
             medication = medicationToEdit,
             notificationsEnabled = nAttive,
             onDismiss = { showMedicationDialog = false },
@@ -200,6 +206,17 @@ fun SettingsPanelContent(
         HorizontalDivider(color = GrayBorder)
 
         LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(vertical = 16.dp)) {
+            item {
+                ProfileContextSwitcher(
+                    profiles = profiles,
+                    activeProfile = activeProfile,
+                    onProfileSelected = { viewModel.selectProfile(it) },
+                    onAddProfile = { showAddProfileDialog = true },
+                    onDeleteProfile = { viewModel.deleteProfile(it) }
+                )
+                HorizontalDivider(color = GrayBorder, modifier = Modifier.padding(top = 8.dp))
+            }
+
             item { Text(text = "1. Anagrafica Paziente e Medico", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900) }
             item {
                 OutlinedTextField(value = pNome, onValueChange = { pNome = it }, label = { Text("Nome e Cognome Paziente") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White), shape = RoundedCornerShape(12.dp))
@@ -332,5 +349,37 @@ fun SettingsPanelContent(
             }
             item { Spacer(modifier = Modifier.height(32.dp)) }
         }
+    }
+
+    if (showAddProfileDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddProfileDialog = false },
+            title = { Text("Nuovo Profilo") },
+            text = {
+                OutlinedTextField(
+                    value = newProfileName,
+                    onValueChange = { newProfileName = it },
+                    label = { Text("Nome Paziente") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (newProfileName.isNotBlank()) {
+                        viewModel.addProfile(newProfileName)
+                        newProfileName = ""
+                        showAddProfileDialog = false
+                    }
+                }) {
+                    Text("AGGIUNGI", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddProfileDialog = false }) {
+                    Text("ANNULLA")
+                }
+            }
+        )
     }
 }

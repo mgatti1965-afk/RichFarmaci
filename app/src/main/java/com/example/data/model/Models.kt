@@ -4,17 +4,45 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.UUID
 
-@Entity(tableName = "medications")
+@Entity(tableName = "profiles")
+data class Profile(
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val pazienteNome: String = "",
+    val pazienteCf: String = "",
+    val medicoNome: String = "",
+    val medicoTelefono: String = "",
+    val medicoEmail: String = "",
+    val secondoIndirizzo: String = "",
+    val messaggioTesta: String = "Gentile Dottore, Le chiedo cortesemente la prescrizione dei seguenti medicinali intestati a me:",
+    val messaggioCoda: String = "La ringrazio per la disponibilità. Cordiali saluti.",
+    val tipoInvio: Int = 0,
+    val notificheAttive: Boolean = false,
+    val descrizioneNotifica: String = "È ora di prendere il farmaco"
+)
+
+@Entity(
+    tableName = "medications",
+    foreignKeys = [
+        androidx.room.ForeignKey(
+            entity = Profile::class,
+            parentColumns = ["id"],
+            childColumns = ["profileId"],
+            onDelete = androidx.room.ForeignKey.CASCADE
+        )
+    ],
+    indices = [androidx.room.Index("profileId")]
+)
 data class Medication(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val profileId: String,
     val nome: String,
     val scatole: Int = 1,
     val note: String = "",
     val inPausa: Boolean = false,
     val notificaAttiva: Boolean = false,
     val orarioNotifica: String = "08:00",
-    val frequenzaValore: Int = 0, // 0 significa nessuna ripetizione
-    val frequenzaTipo: String = "ORE" // "ORE" o "GIORNI"
+    val frequenzaValore: Int = 1, // 0 significa nessuna ripetizione, default 1
+    val frequenzaTipo: String = "GIORNI" // "ORE" o "GIORNI"
 )
 
 data class SentMedication(
@@ -23,9 +51,21 @@ data class SentMedication(
     val note: String = ""
 )
 
-@Entity(tableName = "sent_requests")
+@Entity(
+    tableName = "sent_requests",
+    foreignKeys = [
+        androidx.room.ForeignKey(
+            entity = Profile::class,
+            parentColumns = ["id"],
+            childColumns = ["profileId"],
+            onDelete = androidx.room.ForeignKey.CASCADE
+        )
+    ],
+    indices = [androidx.room.Index("profileId")]
+)
 data class SentRequest(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val profileId: String,
     val data: String, // Readable Date string, e.g. "15 Giugno 2026 - 15:30"
     val pazienteNome: String,
     val medicoNome: String,

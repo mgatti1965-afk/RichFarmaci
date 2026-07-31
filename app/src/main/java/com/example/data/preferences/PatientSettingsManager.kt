@@ -62,4 +62,12 @@ class PatientSettingsManager(context: Context) {
                settings.medicoNome.isNotBlank() &&
                hasContact
     }
+
+    fun getActiveProfileId(): String? {
+        return prefs.getString("active_profile_id", null)
+    }
+
+    fun setActiveProfileId(id: String?) {
+        prefs.edit().putString("active_profile_id", id).apply()
+    }
 }

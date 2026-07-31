@@ -11,15 +11,20 @@ import android.net.Uri
 import com.example.data.db.AppDatabase
 import com.example.data.model.Medication
 import com.example.data.model.PatientSettings
+import com.example.data.model.Profile
 import com.example.data.model.SentMedication
 import com.example.data.model.SentRequest
 import com.example.data.preferences.PatientSettingsManager
 import com.example.data.repository.MedicationRepository
+import com.example.data.repository.ProfileRepository
 import com.example.data.repository.SentRequestRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -31,7 +36,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val db = AppDatabase.getDatabase(application)
     private val medicationRepository = MedicationRepository(db.medicationDao())
     private val sentRequestRepository = SentRequestRepository(db.sentRequestDao())
+    private val profileRepository = ProfileRepository(db.profileDao())
     private val settingsManager = PatientSettingsManager(application)
+
+    // Profiles List
+    val profiles: StateFlow<List<Profile>> = profileRepository.allProfiles
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    // Active Profile State
+    private val _activeProfileId = MutableStateFlow(settingsManager.getActiveProfileId())
+    val activeProfileId: StateFlow<String?> = _activeProfileId.asStateFlow()
+
+    private val _activeProfile = MutableStateFlow<Profile?>(null)
+    val activeProfile: StateFlow<Profile?> = _activeProfile.asStateFlow()
 
     // Screen navigation state
     private val _currentTab = MutableStateFlow(0) // 0 = Request, 1 = History
@@ -45,11 +66,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val settings: StateFlow<PatientSettings> = _settings.asStateFlow()
 
     // Configuration Validity
-    private val _isConfigured = MutableStateFlow(settingsManager.isConfigured())
+    private val _isConfigured = MutableStateFlow(false)
     val isConfigured: StateFlow<Boolean> = _isConfigured.asStateFlow()
 
     // Medications Flow
-    val medications: StateFlow<List<Medication>> = medicationRepository.allMedications
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val medications: StateFlow<List<Medication>> = _activeProfileId
+        .flatMapLatest { id ->
+            if (id != null) medicationRepository.getMedicationsByProfile(id)
+            else flowOf(emptyList())
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -57,7 +83,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
 
     // History Flow
-    val sentRequests: StateFlow<List<SentRequest>> = sentRequestRepository.allSentRequests
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val sentRequests: StateFlow<List<SentRequest>> = _activeProfileId
+        .flatMapLatest { id ->
+            if (id != null) sentRequestRepository.getSentRequestsByProfile(id)
+            else flowOf(emptyList())
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -78,15 +109,65 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
-            // Check database and pre-populate ONLY if empty and fiscal code is CLLRNN40M59L957V
-            val savedCF = settingsManager.getSettings().pazienteCf.trim().uppercase()
-            if (savedCF == "CLLRNN40M59L957V") {
-                val snapshot = db.medicationDao().getAllMedicationsSnapshot()
-                if (snapshot.isEmpty()) {
-                    medicationRepository.forcePrepopulateWithDefaults()
+            migrateFromSharedPreferencesIfNeeded()
+            
+            // Auto-select first profile if none selected
+            if (_activeProfileId.value == null) {
+                val currentProfiles = db.profileDao().getAllProfilesSnapshot()
+                if (currentProfiles.isNotEmpty()) {
+                    selectProfile(currentProfiles.first().id)
                 }
+            } else {
+                refreshActiveProfile()
             }
+            
             updateConfigStatus()
+        }
+    }
+
+    private suspend fun migrateFromSharedPreferencesIfNeeded() {
+        val currentProfiles = db.profileDao().getAllProfilesSnapshot()
+        if (currentProfiles.isEmpty() && settingsManager.isConfigured()) {
+            val legacySettings = settingsManager.getSettings()
+            val newProfile = Profile(
+                pazienteNome = legacySettings.pazienteNome,
+                pazienteCf = legacySettings.pazienteCf,
+                medicoNome = legacySettings.medicoNome,
+                medicoTelefono = legacySettings.medicoTelefono,
+                medicoEmail = legacySettings.medicoEmail,
+                secondoIndirizzo = legacySettings.secondoIndirizzo,
+                messaggioTesta = legacySettings.messaggioTesta,
+                messaggioCoda = legacySettings.messaggioCoda,
+                tipoInvio = legacySettings.tipoInvio,
+                notificheAttive = legacySettings.notificheAttive,
+                descrizioneNotifica = legacySettings.descrizioneNotifica
+            )
+            profileRepository.insertProfile(newProfile)
+            
+            // Migrate medications if any (using default if CF matches)
+            val cfUppercase = newProfile.pazienteCf.trim().uppercase()
+            if (cfUppercase == "CLLRNN40M59L957V") {
+                medicationRepository.forcePrepopulateWithDefaults(newProfile.id)
+            }
+        }
+    }
+
+    fun selectProfile(id: String) {
+        viewModelScope.launch {
+            _activeProfileId.value = id
+            settingsManager.setActiveProfileId(id)
+            refreshActiveProfile()
+            clearFormSelection()
+            updateConfigStatus()
+        }
+    }
+
+    private suspend fun refreshActiveProfile() {
+        val id = _activeProfileId.value
+        if (id != null) {
+            _activeProfile.value = profileRepository.getProfileById(id)
+        } else {
+            _activeProfile.value = null
         }
     }
 
@@ -99,8 +180,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun updateConfigStatus() {
-        _isConfigured.value = settingsManager.isConfigured()
-        _settings.value = settingsManager.getSettings()
+        _isConfigured.value = _activeProfile.value != null
+        _settings.value = _activeProfile.value?.let { p ->
+            PatientSettings(
+                pazienteNome = p.pazienteNome,
+                pazienteCf = p.pazienteCf,
+                medicoNome = p.medicoNome,
+                medicoTelefono = p.medicoTelefono,
+                medicoEmail = p.medicoEmail,
+                secondoIndirizzo = p.secondoIndirizzo,
+                messaggioTesta = p.messaggioTesta,
+                messaggioCoda = p.messaggioCoda,
+                tipoInvio = p.tipoInvio,
+                notificheAttive = p.notificheAttive,
+                descrizioneNotifica = p.descrizioneNotifica
+            )
+        } ?: PatientSettings()
     }
 
     // Update selection from UI (handles both selection toggle and quantity)
@@ -184,36 +279,87 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Save profile configurations
     fun savePatientSettings(newSettings: PatientSettings) {
         viewModelScope.launch {
-            val oldSettings = settingsManager.getSettings()
-            
-            // Se il nome del medico è cambiato, cancella tutti i dati precedenti
-            val doctorChanged = oldSettings.medicoNome.isNotBlank() && 
-                               oldSettings.medicoNome != newSettings.medicoNome
+            val currentProfile = _activeProfile.value
+            if (currentProfile != null) {
+                val updatedProfile = currentProfile.copy(
+                    pazienteNome = newSettings.pazienteNome,
+                    pazienteCf = newSettings.pazienteCf,
+                    medicoNome = newSettings.medicoNome,
+                    medicoTelefono = newSettings.medicoTelefono,
+                    medicoEmail = newSettings.medicoEmail,
+                    secondoIndirizzo = newSettings.secondoIndirizzo,
+                    messaggioTesta = newSettings.messaggioTesta,
+                    messaggioCoda = newSettings.messaggioCoda,
+                    tipoInvio = newSettings.tipoInvio,
+                    notificheAttive = newSettings.notificheAttive,
+                    descrizioneNotifica = newSettings.descrizioneNotifica
+                )
+                profileRepository.updateProfile(updatedProfile)
+                _activeProfile.value = updatedProfile
+                updateConfigStatus()
 
-            if (doctorChanged) {
-                medicationRepository.clearAll()
-                clearFormSelection()
+                // Update notifications scheduling
+                val currentMedications = medications.value
+                com.example.util.NotificationHelper.updateAllNotifications(
+                    getApplication(),
+                    currentMedications,
+                    newSettings.notificheAttive,
+                    newSettings.descrizioneNotifica
+                )
+
+                // Check Special CF criteria
+                val cfUppercase = newSettings.pazienteCf.trim().uppercase()
+                if (cfUppercase == "CLLRNN40M59L957V") {
+                    val dbMedicationsSnapshot = medicationRepository.getMedicationsSnapshotByProfile(updatedProfile.id)
+                    if (dbMedicationsSnapshot.isEmpty()) {
+                        medicationRepository.forcePrepopulateWithDefaults(updatedProfile.id)
+                    }
+                }
+            } else {
+                // Create new profile if none active? 
+                // For now, let's assume we use addProfile for creation
             }
+        }
+    }
 
-            settingsManager.saveSettings(newSettings)
-            updateConfigStatus()
+    fun addProfile(name: String) {
+        viewModelScope.launch {
+            val newProfile = Profile(pazienteNome = name)
+            profileRepository.insertProfile(newProfile)
+            selectProfile(newProfile.id)
+        }
+    }
 
-            // Update notifications scheduling
-            val currentMedications = medications.value
-            com.example.util.NotificationHelper.updateAllNotifications(
-                getApplication(),
-                currentMedications,
-                newSettings.notificheAttive,
-                newSettings.descrizioneNotifica
-            )
+    fun deleteCurrentProfile() {
+        viewModelScope.launch {
+            _activeProfile.value?.let { profile ->
+                profileRepository.deleteProfile(profile)
+                _activeProfileId.value = null
+                settingsManager.setActiveProfileId(null)
+                
+                val remainingProfiles = db.profileDao().getAllProfilesSnapshot()
+                if (remainingProfiles.isNotEmpty()) {
+                    selectProfile(remainingProfiles.first().id)
+                } else {
+                    _activeProfile.value = null
+                    updateConfigStatus()
+                }
+            }
+        }
+    }
 
-            // Check Special CF criteria
-            // "Se viene confermato il C.F. del paziente uguale a CLLRNN40M59L957V e la lista dei medicinali è vuota inizializzarli"
-            val cfUppercase = newSettings.pazienteCf.trim().uppercase()
-            if (cfUppercase == "CLLRNN40M59L957V") {
-                val dbMedicationsSnapshot = db.medicationDao().getAllMedicationsSnapshot()
-                if (dbMedicationsSnapshot.isEmpty()) {
-                    medicationRepository.forcePrepopulateWithDefaults()
+    fun deleteProfile(profile: Profile) {
+        viewModelScope.launch {
+            profileRepository.deleteProfile(profile)
+            if (_activeProfileId.value == profile.id) {
+                _activeProfileId.value = null
+                settingsManager.setActiveProfileId(null)
+                val remainingProfiles = db.profileDao().getAllProfilesSnapshot()
+                if (remainingProfiles.isNotEmpty()) {
+                    selectProfile(remainingProfiles.first().id)
+                } else {
+                    _activeProfile.value = null
+                    updateConfigStatus()
                 }
             }
         }
@@ -222,9 +368,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Medication Manager Operations (Crud in configure panel)
     fun addMedication(nome: String, scatole: Int, note: String, notificaAttiva: Boolean = false, orarioNotifica: String = "08:00", frequenzaValore: Int = 0, frequenzaTipo: String = "ORE") {
         viewModelScope.launch {
+            val profileId = _activeProfileId.value ?: return@launch
             if (nome.isNotBlank()) {
                 val newMed = Medication(
                     id = UUID.randomUUID().toString(),
+                    profileId = profileId,
                     nome = nome.trim(),
                     scatole = scatole.coerceAtLeast(0),
                     note = note.trim(),
@@ -361,6 +509,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Logs the sent request into database history
     fun recordSentRequest(messageText: String) {
         viewModelScope.launch {
+            val profileId = _activeProfileId.value ?: return@launch
             val currentProfile = _settings.value
             val listMedications = medications.value
             val selectedIds = _selectedMedicationIds.value
@@ -386,6 +535,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             val req = SentRequest(
                 id = UUID.randomUUID().toString(),
+                profileId = profileId,
                 data = formattedDate,
                 pazienteNome = currentProfile.pazienteNome,
                 medicoNome = currentProfile.medicoNome,

@@ -58,27 +58,28 @@ class NotificationReceiver : BroadcastReceiver() {
 
     private fun rescheduleNextAlarm(context: Context, medicationId: String) {
         val db = AppDatabase.getDatabase(context)
-        val settings = PatientSettingsManager(context).getSettings()
         
         CoroutineScope(Dispatchers.IO).launch {
             val medications = db.medicationDao().getAllMedicationsSnapshot()
             val medication = medications.find { it.id == medicationId }
             
             if (medication != null && medication.notificaAttiva && !medication.inPausa) {
-                NotificationHelper.scheduleNotification(context, medication, settings.descrizioneNotifica)
+                // Recuperiamo il profilo specifico di questo farmaco per avere la descrizione notifica corretta
+                val profile = db.profileDao().getProfileById(medication.profileId)
+                val description = profile?.descrizioneNotifica ?: "È ora di prendere il farmaco"
+                NotificationHelper.scheduleNotification(context, medication, description)
             }
         }
     }
 
     private fun rescheduleAllAlarms(context: Context) {
-        val settings = PatientSettingsManager(context).getSettings()
-        if (!settings.notificheAttive) return
-
         val db = AppDatabase.getDatabase(context)
         CoroutineScope(Dispatchers.IO).launch {
             val medications = db.medicationDao().getAllMedicationsSnapshot()
             medications.filter { it.notificaAttiva && !it.inPausa }.forEach { med ->
-                NotificationHelper.scheduleNotification(context, med, settings.descrizioneNotifica)
+                val profile = db.profileDao().getProfileById(med.profileId)
+                val description = profile?.descrizioneNotifica ?: "È ora di prendere il farmaco"
+                NotificationHelper.scheduleNotification(context, med, description)
             }
         }
     }

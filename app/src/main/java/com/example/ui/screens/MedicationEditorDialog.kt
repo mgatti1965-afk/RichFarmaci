@@ -29,6 +29,7 @@ import com.example.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MedicationEditorDialog(
+    profileId: String,
     medication: Medication? = null,
     onDismiss: () -> Unit,
     onSave: (Medication) -> Unit,
@@ -304,7 +305,7 @@ fun MedicationEditorDialog(
                     onClick = {
                         if (nome.isNotBlank()) {
                             onSave(
-                                (medication ?: Medication(nome = nome)).copy(
+                                (medication ?: Medication(profileId = profileId, nome = nome)).copy(
                                     nome = nome.trim(),
                                     scatole = scatole,
                                     note = note.trim(),

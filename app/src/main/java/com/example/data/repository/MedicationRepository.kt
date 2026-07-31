@@ -6,7 +6,12 @@ import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 class MedicationRepository(private val medicationDao: MedicationDao) {
-    val allMedications: Flow<List<Medication>> = medicationDao.getAllMedications()
+    
+    fun getMedicationsByProfile(profileId: String): Flow<List<Medication>> = 
+        medicationDao.getMedicationsByProfile(profileId)
+
+    suspend fun getMedicationsSnapshotByProfile(profileId: String): List<Medication> =
+        medicationDao.getMedicationsSnapshotByProfile(profileId)
 
     suspend fun insert(medication: Medication) = medicationDao.insert(medication)
 
@@ -18,25 +23,18 @@ class MedicationRepository(private val medicationDao: MedicationDao) {
 
     suspend fun clearAll() = medicationDao.clearAll()
 
-    val defaultMedicationsList = listOf(
-        Medication(id = UUID.randomUUID().toString(), nome = "Zanedip 10 mg", scatole = 2, note = "compresse"),
-        Medication(id = UUID.randomUUID().toString(), nome = "Lasix 25 mg", scatole = 4, note = "compresse"),
-        Medication(id = UUID.randomUUID().toString(), nome = "Pantoprazolo 20 mg", scatole = 1, note = "protettore stomaco"),
-        Medication(id = UUID.randomUUID().toString(), nome = "Cardioaspirina 100 mg", scatole = 1, note = "dopo pranzo"),
-        Medication(id = UUID.randomUUID().toString(), nome = "Zyloric 100 mg", scatole = 1, note = "compresse"),
-        Medication(id = UUID.randomUUID().toString(), nome = "Tareg 160 mg", scatole = 1, note = "compresse della pressione"),
-        Medication(id = UUID.randomUUID().toString(), nome = "Dibase 50.000 u.i./2,5ml", scatole = 1, note = "gocce orali")
+    fun getDefaultMedicationsList(profileId: String) = listOf(
+        Medication(profileId = profileId, nome = "Zanedip 10 mg", scatole = 2, note = "compresse"),
+        Medication(profileId = profileId, nome = "Lasix 25 mg", scatole = 4, note = "compresse"),
+        Medication(profileId = profileId, nome = "Pantoprazolo 20 mg", scatole = 1, note = "protettore stomaco"),
+        Medication(profileId = profileId, nome = "Cardioaspirina 100 mg", scatole = 1, note = "dopo pranzo"),
+        Medication(profileId = profileId, nome = "Zyloric 100 mg", scatole = 1, note = "compresse"),
+        Medication(profileId = profileId, nome = "Tareg 160 mg", scatole = 1, note = "compresse della pressione"),
+        Medication(profileId = profileId, nome = "Dibase 50.000 u.i./2,5ml", scatole = 1, note = "gocce orali")
     )
 
-    suspend fun checkAndPrepopulateIfEmpty() {
-        val snapshot = medicationDao.getAllMedicationsSnapshot()
-        if (snapshot.isEmpty()) {
-            medicationDao.insertAll(defaultMedicationsList)
-        }
-    }
-
-    suspend fun forcePrepopulateWithDefaults() {
-        medicationDao.clearAll()
-        medicationDao.insertAll(defaultMedicationsList)
+    suspend fun forcePrepopulateWithDefaults(profileId: String) {
+        // We don't want to clear ALL medications from ALL profiles, just prepopulate for this one
+        medicationDao.insertAll(getDefaultMedicationsList(profileId))
     }
 }

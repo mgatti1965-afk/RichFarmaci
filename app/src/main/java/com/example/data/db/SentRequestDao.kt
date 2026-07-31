@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SentRequestDao {
-    @Query("SELECT * FROM sent_requests ORDER BY data DESC")
-    fun getAllSentRequests(): Flow<List<SentRequest>>
+    @Query("SELECT * FROM sent_requests WHERE profileId = :profileId ORDER BY data DESC")
+    fun getSentRequestsByProfile(profileId: String): Flow<List<SentRequest>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(sentRequest: SentRequest)

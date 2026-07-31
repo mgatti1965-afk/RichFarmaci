@@ -1,21 +1,31 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.Profile
 import com.example.ui.theme.*
-
 
 @Composable
 fun HelpDialog(type: String, onDismiss: () -> Unit) {
@@ -56,6 +66,132 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
         shape = RoundedCornerShape(16.dp),
         containerColor = GrayBackground
     )
+}
+
+@Composable
+fun ProfileContextSwitcher(
+    profiles: List<Profile>,
+    activeProfile: Profile?,
+    onProfileSelected: (String) -> Unit,
+    onAddProfile: (() -> Unit)? = null,
+    onDeleteProfile: ((Profile) -> Unit)? = null
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Surface(
+            onClick = { expanded = true },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            color = White,
+            border = BorderStroke(1.dp, GrayBorder),
+            shadowElevation = 1.dp
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(if (activeProfile != null) GreenPrimary else GrayBorder, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = activeProfile?.pazienteNome?.take(1)?.uppercase() ?: "?",
+                            color = White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = activeProfile?.pazienteNome ?: "Seleziona Profilo",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Slate900,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (activeProfile != null) {
+                            Text(
+                                text = activeProfile.pazienteCf,
+                                fontSize = 12.sp,
+                                color = Slate600
+                            )
+                        }
+                    }
+                }
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = Slate600
+                )
+            }
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .background(White)
+        ) {
+            profiles.forEach { profile ->
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(profile.pazienteNome, color = Slate900, fontWeight = if(profile.id == activeProfile?.id) FontWeight.Bold else FontWeight.Normal)
+                            if (onDeleteProfile != null && profiles.size > 1) {
+                                IconButton(
+                                    onClick = {
+                                        onDeleteProfile(profile)
+                                        expanded = false
+                                    },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Elimina", tint = Color.Red.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
+                                }
+                            }
+                        }
+                    },
+                    onClick = {
+                        onProfileSelected(profile.id)
+                        expanded = false
+                    }
+                )
+            }
+            if (onAddProfile != null) {
+                HorizontalDivider(color = GrayBorder.copy(alpha = 0.5f))
+                DropdownMenuItem(
+                    text = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Add, contentDescription = null, tint = GreenPrimary)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Aggiungi nuovo paziente", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    onClick = {
+                        onAddProfile()
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
 }
 
 @Composable

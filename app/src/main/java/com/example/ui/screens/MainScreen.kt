@@ -9,6 +9,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -26,9 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.data.model.Profile
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MainViewModel
 
@@ -41,6 +44,10 @@ fun MainScreen(viewModel: MainViewModel) {
     val selectedQuantities by viewModel.selectedQuantities.collectAsState()
     val currentTab by viewModel.currentTab.collectAsState()
     val sentRequests by viewModel.sentRequests.collectAsState()
+    val profiles by viewModel.profiles.collectAsState()
+    val activeProfile by viewModel.activeProfile.collectAsState()
+    var showAddProfileDialog by remember { mutableStateOf(false) }
+    var newProfileName by remember { mutableStateOf("") }
     var showSettings by remember { mutableStateOf(false) }
     var helpType by remember { mutableStateOf<String?>(null) }
     var viewingRequestText by remember { mutableStateOf<String?>(null) }
@@ -111,6 +118,13 @@ fun MainScreen(viewModel: MainViewModel) {
                     }
                 }
 
+                // Profile Selector Context Switcher
+                ProfileContextSwitcher(
+                    profiles = profiles,
+                    activeProfile = activeProfile,
+                    onProfileSelected = { viewModel.selectProfile(it) }
+                )
+
                 TabRow(
                     selectedTabIndex = currentTab,
                     containerColor = White,
@@ -147,30 +161,6 @@ fun MainScreen(viewModel: MainViewModel) {
                                 .fillMaxSize()
                                 .padding(16.dp)
                         ) {
-                            // Patient Info Summary
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = GreenLightBg),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, GreenPrimary.copy(alpha = 0.2f))
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(Icons.Default.Person, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(20.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "${settings.pazienteNome.ifBlank { "Configura profilo" }} • Medico: ${settings.medicoNome.ifBlank { "..." }}",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Slate900
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
                             Text(
                                 text = "Cosa ti serve oggi?",
                                 fontSize = 16.sp,
@@ -283,4 +273,39 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
     }
+
+    if (showAddProfileDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddProfileDialog = false },
+            title = { Text("Nuovo Profilo", fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = newProfileName,
+                    onValueChange = { newProfileName = it },
+                    label = { Text("Nome Paziente") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (newProfileName.isNotBlank()) {
+                        viewModel.addProfile(newProfileName)
+                        newProfileName = ""
+                        showAddProfileDialog = false
+                    }
+                }) {
+                    Text("AGGIUNGI", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddProfileDialog = false }) {
+                    Text("ANNULLA")
+                }
+            },
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
 }
+
