@@ -46,9 +46,9 @@ fun MainScreen(viewModel: MainViewModel) {
     val sentRequests by viewModel.sentRequests.collectAsState()
     val profiles by viewModel.profiles.collectAsState()
     val activeProfile by viewModel.activeProfile.collectAsState()
+    val showSettings by viewModel.showSettings.collectAsState()
     var showAddProfileDialog by remember { mutableStateOf(false) }
     var newProfileName by remember { mutableStateOf("") }
-    var showSettings by remember { mutableStateOf(false) }
     var helpType by remember { mutableStateOf<String?>(null) }
     var viewingRequestText by remember { mutableStateOf<String?>(null) }
 
@@ -110,7 +110,7 @@ fun MainScreen(viewModel: MainViewModel) {
                             Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = "Aiuto", tint = Slate600)
                         }
                         IconButton(
-                            onClick = { showSettings = true },
+                            onClick = { viewModel.setShowSettings(true) },
                             modifier = Modifier.background(GrayBackground, CircleShape)
                         ) {
                             Icon(Icons.Default.Settings, contentDescription = "Impostazioni", tint = Slate600)
@@ -266,7 +266,7 @@ fun MainScreen(viewModel: MainViewModel) {
                             settings = settings,
                             medications = medications,
                             viewModel = viewModel,
-                            onClose = { showSettings = false }
+                            onClose = { viewModel.setShowSettings(false) }
                         )
                     }
                 }

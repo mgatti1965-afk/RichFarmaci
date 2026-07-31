@@ -18,6 +18,7 @@ import com.example.data.preferences.PatientSettingsManager
 import com.example.data.repository.MedicationRepository
 import com.example.data.repository.ProfileRepository
 import com.example.data.repository.SentRequestRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -115,6 +116,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val currentProfiles = db.profileDao().getAllProfilesSnapshot()
             if (currentProfiles.isNotEmpty()) {
                 selectProfile(currentProfiles.first().id)
+            } else {
+                _showSettings.value = true
             }
             
             updateConfigStatus()
@@ -140,11 +143,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             )
             profileRepository.insertProfile(newProfile)
             
-            // Migrate medications if any (using default if CF matches)
-            val cfUppercase = newProfile.pazienteCf.trim().uppercase()
-            if (cfUppercase == "CLLRNN40M59L957V") {
-                medicationRepository.forcePrepopulateWithDefaults(newProfile.id)
-            }
+            // Rimosso il pre-popolamento automatico qui per evitare che appaiano farmaci non voluti all'avvio
         }
     }
 
@@ -173,6 +172,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setShowSettings(show: Boolean) {
         _showSettings.value = show
+        if (!show && _activeProfileId.value == null) {
+            viewModelScope.launch {
+                val currentProfiles = db.profileDao().getAllProfilesSnapshot()
+                if (currentProfiles.isNotEmpty()) {
+                    selectProfile(currentProfiles.first().id)
+                } else {
+                    _showSettings.value = true
+                }
+            }
+        }
     }
 
     private fun updateConfigStatus() {
@@ -275,9 +284,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Save profile configurations
     fun savePatientSettings(newSettings: PatientSettings) {
         viewModelScope.launch {
-            val currentProfile = _activeProfile.value
-            if (currentProfile != null) {
-                val updatedProfile = currentProfile.copy(
+            var profileToProcess = _activeProfile.value
+            
+            if (profileToProcess == null) {
+                // Se non c'è un profilo attivo (es. primo avvio), lo creiamo
+                val newProfile = Profile(
+                    pazienteNome = newSettings.pazienteNome,
+                    pazienteCf = newSettings.pazienteCf,
+                    medicoNome = newSettings.medicoNome,
+                    medicoTelefono = newSettings.medicoTelefono,
+                    medicoEmail = newSettings.medicoEmail,
+                    secondoIndirizzo = newSettings.secondoIndirizzo,
+                    messaggioTesta = newSettings.messaggioTesta,
+                    messaggioCoda = newSettings.messaggioCoda,
+                    tipoInvio = newSettings.tipoInvio,
+                    notificheAttive = newSettings.notificheAttive,
+                    descrizioneNotifica = newSettings.descrizioneNotifica
+                )
+                profileRepository.insertProfile(newProfile)
+                _activeProfileId.value = newProfile.id
+                _activeProfile.value = newProfile
+                settingsManager.setActiveProfileId(newProfile.id)
+                profileToProcess = newProfile
+            } else {
+                // Aggiorniamo il profilo esistente
+                val updatedProfile = profileToProcess.copy(
                     pazienteNome = newSettings.pazienteNome,
                     pazienteCf = newSettings.pazienteCf,
                     medicoNome = newSettings.medicoNome,
@@ -292,37 +323,57 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 profileRepository.updateProfile(updatedProfile)
                 _activeProfile.value = updatedProfile
-                updateConfigStatus()
+                profileToProcess = updatedProfile
+            }
 
-                // Update notifications scheduling
-                val currentMedications = medications.value
-                com.example.util.NotificationHelper.updateAllNotifications(
-                    getApplication(),
-                    currentMedications,
-                    newSettings.notificheAttive,
-                    newSettings.descrizioneNotifica
-                )
+            updateConfigStatus()
 
-                // Check Special CF criteria
-                val cfUppercase = newSettings.pazienteCf.trim().uppercase()
-                if (cfUppercase == "CLLRNN40M59L957V") {
-                    val dbMedicationsSnapshot = medicationRepository.getMedicationsSnapshotByProfile(updatedProfile.id)
-                    if (dbMedicationsSnapshot.isEmpty()) {
-                        medicationRepository.forcePrepopulateWithDefaults(updatedProfile.id)
-                    }
+            // Aggiorna la schedulazione delle notifiche
+            val currentMedications = medicationRepository.getMedicationsSnapshotByProfile(profileToProcess.id)
+            com.example.util.NotificationHelper.updateAllNotifications(
+                getApplication(),
+                currentMedications,
+                newSettings.notificheAttive,
+                newSettings.descrizioneNotifica
+            )
+
+            // Controllo Codice Fiscale Speciale per pre-popolamento rubrica
+            val cfClean = newSettings.pazienteCf.replace(" ", "").uppercase()
+            if (cfClean == "CLLRNN40M59L957V") {
+                val medsInDb = medicationRepository.getMedicationsSnapshotByProfile(profileToProcess.id)
+                if (medsInDb.isEmpty()) {
+                    android.util.Log.d("RichFarmaci", "CF Speciale rilevato: inserimento farmaci predefiniti")
+                    medicationRepository.forcePrepopulateWithDefaults(profileToProcess.id)
                 }
-            } else {
-                // Create new profile if none active? 
-                // For now, let's assume we use addProfile for creation
             }
         }
     }
 
+    fun startNewProfile() {
+        _activeProfileId.value = null
+        _activeProfile.value = null
+        updateConfigStatus()
+    }
+
     fun addProfile(name: String) {
         viewModelScope.launch {
-            val newProfile = Profile(pazienteNome = name)
-            profileRepository.insertProfile(newProfile)
-            selectProfile(newProfile.id)
+            _activeProfileId.value = null
+            _activeProfile.value = null
+            _settings.value = PatientSettings(pazienteNome = name)
+            _isConfigured.value = false
+        }
+    }
+
+    fun resetEverything() {
+        viewModelScope.launch(Dispatchers.IO) {
+            db.clearAllTables()
+            getApplication<Application>().getSharedPreferences("richfarmaci_prefs", Context.MODE_PRIVATE).edit().clear().apply()
+            _activeProfileId.value = null
+            _activeProfile.value = null
+            _showSettings.value = true
+            launch(Dispatchers.Main) {
+                updateConfigStatus()
+            }
         }
     }
 
@@ -356,6 +407,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 } else {
                     _activeProfile.value = null
                     updateConfigStatus()
+                    _showSettings.value = true
                 }
             }
         }

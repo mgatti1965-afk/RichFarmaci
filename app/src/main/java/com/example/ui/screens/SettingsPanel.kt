@@ -34,8 +34,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.data.model.Medication
 import com.example.data.model.PatientSettings
+import com.example.data.model.Profile
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MainViewModel
+import com.example.util.capitalizeWords
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,8 +71,30 @@ fun SettingsPanelContent(
     var nDesc by remember(settings) { mutableStateOf(settings.descrizioneNotifica) }
 
     var exitAttempted by remember(settings) { mutableStateOf(false) }
+    val profileId by viewModel.activeProfileId.collectAsState()
+    val isNewProfile = profileId == null
 
-    val hasChanges = remember(settings, pNome, pCf, mNome, mTel, mEmail, secInd, msgTesta, msgCoda, valType, nAttive, nDesc) {
+    if (pCf == "!!!" || pCf == "!!! ") {
+        AlertDialog(
+            onDismissRequest = { pCf = "" },
+            title = { Text("⚠️ RESET TOTALE", color = Color.Red, fontWeight = FontWeight.Bold) },
+            text = { Text("Sei sicuro di voler eliminare TUTTI i dati? Questa operazione cancellerà ogni profilo e ogni farmaco salvato e non è reversibile.") },
+            confirmButton = {
+                Button(
+                    onClick = { 
+                        viewModel.resetEverything()
+                        onClose()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) { Text("ELIMINA TUTTO", color = White) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pCf = "" }) { Text("ANNULLA") }
+            }
+        )
+    }
+
+    val hasChanges = remember(pNome, pCf, mNome, mTel, mEmail, secInd, msgTesta, msgCoda, valType, nAttive, nDesc) {
         pNome != settings.pazienteNome ||
         pCf != settings.pazienteCf ||
         mNome != settings.medicoNome ||
@@ -95,7 +119,6 @@ fun SettingsPanelContent(
 
     var showMedicationDialog by remember { mutableStateOf(false) }
     var medicationToEdit by remember { mutableStateOf<Medication?>(null) }
-    val profileId by viewModel.activeProfileId.collectAsState()
 
     if (showMedicationDialog) {
         MedicationEditorDialog(
@@ -161,7 +184,7 @@ fun SettingsPanelContent(
                             }
                         }
                     }
-                    if (cName.isNotBlank()) mNome = cName
+                    if (cName.isNotBlank()) mNome = cName.capitalizeWords()
                     if (cPhone.isNotBlank()) mTel = cPhone.replace("\\s".toRegex(), "").replace("[^+0-9]".toRegex(), "")
                     if (cEmail.isNotBlank()) mEmail = cEmail
                 } catch (e: Exception) {
@@ -182,7 +205,12 @@ fun SettingsPanelContent(
     Column(modifier = Modifier.fillMaxSize().background(GrayBackground)) {
         Column(modifier = Modifier.fillMaxWidth().background(White).padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "⚙️ Configurazione", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Slate900)
+                Column {
+                    Text(text = "⚙️ Configurazione", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Slate900)
+                    if (isNewProfile) {
+                        Text(text = "CREAZIONE NUOVO PROFILO", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = GreenPrimary)
+                    }
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     IconButton(onClick = { showHelp = true }, modifier = Modifier.background(GrayBackground, CircleShape)) {
                         Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = "Aiuto", tint = Slate900)
@@ -221,8 +249,8 @@ fun SettingsPanelContent(
             item {
                 OutlinedTextField(
                     value = pNome,
-                    onValueChange = { pNome = it },
-                    label = { Text("Nome e Cognome Paziente") },
+                    onValueChange = { pNome = it.capitalizeWords() },
+                    label = { Text("Nome e Cognome Paziente (*)") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Slate900,
@@ -232,6 +260,7 @@ fun SettingsPanelContent(
                         unfocusedContainerColor = BlueInputBg,
                         focusedContainerColor = BlueInputBg
                     ),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                     shape = RoundedCornerShape(12.dp)
                 )
             }
@@ -239,7 +268,7 @@ fun SettingsPanelContent(
                 OutlinedTextField(
                     value = pCf,
                     onValueChange = { pCf = it.uppercase() },
-                    label = { Text("Codice Fiscale") },
+                    label = { Text("Codice Fiscale (*)") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Slate900,
@@ -267,9 +296,9 @@ fun SettingsPanelContent(
                     }
                 }
             }
-            item { OutlinedTextField(value = mNome, onValueChange = { mNome = it }, label = { Text("Nome Medico") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
-            item { OutlinedTextField(value = mTel, onValueChange = { mTel = it }, label = { Text("Cellulare Medico") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
-            item { OutlinedTextField(value = mEmail, onValueChange = { mEmail = it }, label = { Text("Email Medico") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
+            item { OutlinedTextField(value = mNome, onValueChange = { mNome = it.capitalizeWords() }, label = { Text("Nome Medico (*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
+            item { OutlinedTextField(value = mTel, onValueChange = { mTel = it }, label = { Text("Cellulare Medico (o Email*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
+            item { OutlinedTextField(value = mEmail, onValueChange = { mEmail = it }, label = { Text("Email Medico (o Cellulare*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
             item { OutlinedTextField(value = secInd, onValueChange = { secInd = it }, label = { Text("Note recapito (Opzionale)") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
             
             item {
@@ -316,7 +345,7 @@ fun SettingsPanelContent(
                     if (nAttive) {
                         OutlinedTextField(
                             value = nDesc,
-                            onValueChange = { nDesc = it },
+                            onValueChange = { nDesc = it.capitalizeWords() },
                             label = { Text("Descrizione Notifica") },
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -334,53 +363,69 @@ fun SettingsPanelContent(
             }
             item {
                 val formsFilled = pNome.isNotBlank() && pCf.isNotBlank() && mNome.isNotBlank() && ((valType == 2 && mEmail.isNotBlank()) || (valType != 2 && mTel.isNotBlank()))
-                if (hasChanges) {
-                    Button(onClick = {
+                
+                Button(
+                    onClick = {
                         if (formsFilled) {
                             viewModel.savePatientSettings(PatientSettings(pazienteNome = pNome, pazienteCf = pCf, medicoNome = mNome, medicoTelefono = mTel, medicoEmail = mEmail, secondoIndirizzo = secInd, messaggioTesta = msgTesta, messaggioCoda = msgCoda, tipoInvio = valType, notificheAttive = nAttive, descrizioneNotifica = nDesc))
-                            Toast.makeText(context, "Profilo salvato!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Profilo salvato correttamente!", Toast.LENGTH_SHORT).show()
+                            exitAttempted = false // Reset exit flag on success
                             onClose()
-                        } else Toast.makeText(context, "Riempi i campi obbligatori (Nome, CF, Medico e Recapito).", Toast.LENGTH_LONG).show()
-                    }, modifier = Modifier.fillMaxWidth().height(60.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.Red), shape = RoundedCornerShape(16.dp)) {
-                        Text("SALVA CONFIGURAZIONE", fontWeight = FontWeight.Bold, color = White)
-                    }
+                        } else {
+                            Toast.makeText(context, "Attenzione: Compila tutti i campi obbligatori segnati con (*)", Toast.LENGTH_LONG).show()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (formsFilled) Color(0xFF2E7D32) else Color.Gray
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = hasChanges || isNewProfile
+                ) {
+                    Text(
+                        if (formsFilled) "SALVA CONFIGURAZIONE" else "COMPILA CAMPI OBBLIGATORI (*)",
+                        fontWeight = FontWeight.Bold,
+                        color = White
+                    )
                 }
             }
 
-            item {
-                HorizontalDivider(color = GrayBorder)
-                Text(text = "3. Gestore Rubrica Farmaci", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900, modifier = Modifier.padding(top = 10.dp))
-            }
-            item {
-                Button(
-                    onClick = {
-                        medicationToEdit = null
-                        showMedicationDialog = true
-                    },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Slate900),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = White)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("NUOVO FARMACO/NOTIFICA", fontWeight = FontWeight.Bold, color = White)
+            if (!isNewProfile) {
+                item {
+                    HorizontalDivider(color = GrayBorder)
+                    Text(text = "3. Gestore Rubrica Farmaci", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900, modifier = Modifier.padding(top = 10.dp))
                 }
-            }
-            item { Text("I Tuoi Farmaci Salvati:", fontWeight = FontWeight.Bold, color = Slate900, modifier = Modifier.padding(top = 8.dp)) }
-            if (medications.isEmpty()) {
-                item { Text("La rubrica è vuota.", color = Slate600, modifier = Modifier.padding(16.dp)) }
-            } else {
-                items(medications, key = { it.id }) { med ->
-                    ConfigurationMedicationRow(
-                        med = med,
-                        notificationsEnabled = settings.notificheAttive,
-                        onEdit = {
-                            medicationToEdit = med
+                item {
+                    Button(
+                        onClick = {
+                            medicationToEdit = null
                             showMedicationDialog = true
                         },
-                        onToggleStandby = { viewModel.toggleMedicationStandby(med) },
-                        onDelete = { viewModel.deleteMedication(med) }
-                    )
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Slate900),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, tint = White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("NUOVO FARMACO/NOTIFICA", fontWeight = FontWeight.Bold, color = White)
+                    }
+                }
+                item { Text("I Tuoi Farmaci Salvati:", fontWeight = FontWeight.Bold, color = Slate900, modifier = Modifier.padding(top = 8.dp)) }
+                if (medications.isEmpty()) {
+                    item { Text("La rubrica è vuota.", color = Slate600, modifier = Modifier.padding(16.dp)) }
+                } else {
+                    items(medications, key = { it.id }) { med ->
+                        ConfigurationMedicationRow(
+                            med = med,
+                            notificationsEnabled = settings.notificheAttive,
+                            onEdit = {
+                                medicationToEdit = med
+                                showMedicationDialog = true
+                            },
+                            onToggleStandby = { viewModel.toggleMedicationStandby(med) },
+                            onDelete = { viewModel.deleteMedication(med) }
+                        )
+                    }
                 }
             }
             item { Spacer(modifier = Modifier.height(32.dp)) }
@@ -394,7 +439,7 @@ fun SettingsPanelContent(
             text = {
                 OutlinedTextField(
                     value = newProfileName,
-                    onValueChange = { newProfileName = it },
+                    onValueChange = { newProfileName = it.capitalizeWords() },
                     label = { Text("Nome Paziente") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -406,6 +451,7 @@ fun SettingsPanelContent(
                         unfocusedContainerColor = BlueInputBg,
                         focusedContainerColor = BlueInputBg
                     ),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                     shape = RoundedCornerShape(12.dp)
                 )
             },
