@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -109,7 +110,7 @@ fun MedicationEditorDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            colors = CardDefaults.cardColors(containerColor = GrayBackground),
+            colors = CardDefaults.cardColors(containerColor = White),
             border = BorderStroke(1.dp, GrayBorder)
         ) {
             val scrollState = rememberScrollState()
@@ -144,12 +145,14 @@ fun MedicationEditorDialog(
                     label = { Text("Nome Farmaco") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Slate900,
+                        focusedBorderColor = GreenPrimary,
                         unfocusedBorderColor = GrayBorder,
-                        focusedLabelColor = Slate900,
+                        focusedLabelColor = GreenPrimary,
                         unfocusedLabelColor = Slate600,
-                        unfocusedContainerColor = BlueInputBg,
-                        focusedContainerColor = BlueInputBg
+                        unfocusedContainerColor = White,
+                        focusedContainerColor = White,
+                        focusedTextColor = Slate900,
+                        unfocusedTextColor = Slate900
                     ),
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
                     shape = RoundedCornerShape(12.dp)
@@ -191,12 +194,14 @@ fun MedicationEditorDialog(
                     label = { Text("Note (es: dopo i pasti)") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Slate900,
+                        focusedBorderColor = GreenPrimary,
                         unfocusedBorderColor = GrayBorder,
-                        focusedLabelColor = Slate900,
+                        focusedLabelColor = GreenPrimary,
                         unfocusedLabelColor = Slate600,
-                        unfocusedContainerColor = BlueInputBg,
-                        focusedContainerColor = BlueInputBg
+                        unfocusedContainerColor = White,
+                        focusedContainerColor = White,
+                        focusedTextColor = Slate900,
+                        unfocusedTextColor = Slate900
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -251,13 +256,14 @@ fun MedicationEditorDialog(
                                             onClick = { if (frequenzaValore > 0) frequenzaValore-- },
                                             modifier = Modifier.size(32.dp)
                                         ) {
-                                            Text("−", fontWeight = FontWeight.Bold)
+                                            Text("−", fontWeight = FontWeight.Bold, color = Slate900)
                                         }
                                         Text(
                                             text = if (frequenzaValore == 0) "0" else frequenzaValore.toString(),
                                             fontWeight = FontWeight.Bold,
                                             modifier = Modifier.width(28.dp),
-                                            textAlign = TextAlign.Center
+                                            textAlign = TextAlign.Center,
+                                            color = Slate900
                                         )
                                         IconButton(
                                             onClick = { frequenzaValore++ },
@@ -356,6 +362,6 @@ fun TimePickerDialog(
             }
         },
         shape = RoundedCornerShape(28.dp),
-        containerColor = GrayBackground
+        containerColor = White
     )
 }

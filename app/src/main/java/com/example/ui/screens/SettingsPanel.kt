@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -253,12 +254,14 @@ fun SettingsPanelContent(
                     label = { Text("Nome e Cognome Paziente (*)") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Slate900,
+                        focusedBorderColor = GreenPrimary,
                         unfocusedBorderColor = GrayBorder,
-                        focusedLabelColor = Slate900,
+                        focusedLabelColor = GreenPrimary,
                         unfocusedLabelColor = Slate600,
-                        unfocusedContainerColor = BlueInputBg,
-                        focusedContainerColor = BlueInputBg
+                        unfocusedContainerColor = White,
+                        focusedContainerColor = White,
+                        focusedTextColor = Slate900,
+                        unfocusedTextColor = Slate900
                     ),
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                     shape = RoundedCornerShape(12.dp)
@@ -271,42 +274,44 @@ fun SettingsPanelContent(
                     label = { Text("Codice Fiscale (*)") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Slate900,
+                        focusedBorderColor = GreenPrimary,
                         unfocusedBorderColor = GrayBorder,
-                        focusedLabelColor = Slate900,
+                        focusedLabelColor = GreenPrimary,
                         unfocusedLabelColor = Slate600,
-                        unfocusedContainerColor = BlueInputBg,
-                        focusedContainerColor = BlueInputBg
+                        unfocusedContainerColor = White,
+                        focusedContainerColor = White,
+                        focusedTextColor = Slate900,
+                        unfocusedTextColor = Slate900
                     ),
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
                     shape = RoundedCornerShape(12.dp)
                 )
             }
             item {
-                Card(colors = CardDefaults.cardColors(containerColor = GreenLightBg), border = BorderStroke(1.2.dp, Slate900), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                Card(colors = CardDefaults.cardColors(containerColor = GreenLightBg), border = BorderStroke(1.2.dp, GreenPrimary), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
                     Row(modifier = Modifier.padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Importa Medico da Rubrica", fontWeight = FontWeight.Bold, color = Slate900)
-                            Text("Seleziona dal telefono il contatto del medico", fontSize = 13.sp)
+                            Text("Seleziona dal telefono il contatto del medico", fontSize = 13.sp, color = Slate600)
                         }
                         Button(onClick = {
                             if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) pickContactLauncher.launch(null)
                             else permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                        }, colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)) { Text("SCEGLI") }
+                        }, colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)) { Text("SCEGLI", color = White) }
                     }
                 }
             }
-            item { OutlinedTextField(value = mNome, onValueChange = { mNome = it.capitalizeWords() }, label = { Text("Nome Medico (*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
-            item { OutlinedTextField(value = mTel, onValueChange = { mTel = it }, label = { Text("Cellulare Medico (o Email*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
-            item { OutlinedTextField(value = mEmail, onValueChange = { mEmail = it }, label = { Text("Email Medico (o Cellulare*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
-            item { OutlinedTextField(value = secInd, onValueChange = { secInd = it }, label = { Text("Note recapito (Opzionale)") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
+            item { OutlinedTextField(value = mNome, onValueChange = { mNome = it.capitalizeWords() }, label = { Text("Nome Medico (*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp)) }
+            item { OutlinedTextField(value = mTel, onValueChange = { mTel = it }, label = { Text("Cellulare Medico (o Email*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp)) }
+            item { OutlinedTextField(value = mEmail, onValueChange = { mEmail = it }, label = { Text("Email Medico (o Cellulare*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp)) }
+            item { OutlinedTextField(value = secInd, onValueChange = { secInd = it }, label = { Text("Note recapito (Opzionale)") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp)) }
             
             item {
                 HorizontalDivider(color = GrayBorder)
                 Text(text = "2. Opzioni Messaggio", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900, modifier = Modifier.padding(top = 10.dp))
             }
-            item { OutlinedTextField(value = msgTesta, onValueChange = { msgTesta = it }, label = { Text("Frase di Testa") }, modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
-            item { OutlinedTextField(value = msgCoda, onValueChange = { msgCoda = it }, label = { Text("Frase di Coda") }, modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Slate900, unfocusedBorderColor = GrayBorder, focusedLabelColor = Slate900, unfocusedLabelColor = Slate600, unfocusedContainerColor = BlueInputBg, focusedContainerColor = BlueInputBg), shape = RoundedCornerShape(12.dp)) }
+            item { OutlinedTextField(value = msgTesta, onValueChange = { msgTesta = it }, label = { Text("Frase di Testa") }, modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp)) }
+            item { OutlinedTextField(value = msgCoda, onValueChange = { msgCoda = it }, label = { Text("Frase di Coda") }, modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp)) }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Tipo Invio Predefinito:", fontWeight = FontWeight.Bold, color = Slate900)
@@ -349,12 +354,14 @@ fun SettingsPanelContent(
                             label = { Text("Descrizione Notifica") },
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Slate900,
+                                focusedBorderColor = GreenPrimary,
                                 unfocusedBorderColor = GrayBorder,
-                                focusedLabelColor = Slate900,
+                                focusedLabelColor = GreenPrimary,
                                 unfocusedLabelColor = Slate600,
-                                unfocusedContainerColor = BlueInputBg,
-                                focusedContainerColor = BlueInputBg
+                                unfocusedContainerColor = White,
+                                focusedContainerColor = White,
+                                focusedTextColor = Slate900,
+                                unfocusedTextColor = Slate900
                             ),
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -377,7 +384,7 @@ fun SettingsPanelContent(
                     },
                     modifier = Modifier.fillMaxWidth().height(60.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (formsFilled) Color(0xFF2E7D32) else Color.Gray
+                        containerColor = if (formsFilled) Color(0xFFD32F2F) else Color.Gray
                     ),
                     shape = RoundedCornerShape(16.dp),
                     enabled = hasChanges || isNewProfile
@@ -444,12 +451,14 @@ fun SettingsPanelContent(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Slate900,
+                        focusedBorderColor = GreenPrimary,
                         unfocusedBorderColor = GrayBorder,
-                        focusedLabelColor = Slate900,
+                        focusedLabelColor = GreenPrimary,
                         unfocusedLabelColor = Slate600,
-                        unfocusedContainerColor = BlueInputBg,
-                        focusedContainerColor = BlueInputBg
+                        unfocusedContainerColor = White,
+                        focusedContainerColor = White,
+                        focusedTextColor = Slate900,
+                        unfocusedTextColor = Slate900
                     ),
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                     shape = RoundedCornerShape(12.dp)

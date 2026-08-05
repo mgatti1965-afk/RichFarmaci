@@ -87,7 +87,7 @@ fun MainScreen(viewModel: MainViewModel) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(GrayBackground)
+                        .background(White)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -127,7 +127,7 @@ fun MainScreen(viewModel: MainViewModel) {
 
                 TabRow(
                     selectedTabIndex = currentTab,
-                    containerColor = GrayBackground,
+                    containerColor = White,
                     contentColor = GreenPrimary,
                     indicator = { tabPositions ->
                         TabRowDefaults.SecondaryIndicator(
@@ -277,7 +277,7 @@ fun MainScreen(viewModel: MainViewModel) {
     if (showAddProfileDialog) {
         AlertDialog(
             onDismissRequest = { showAddProfileDialog = false },
-            title = { Text("Nuovo Profilo", fontWeight = FontWeight.Bold) },
+            title = { Text("Nuovo Profilo", fontWeight = FontWeight.Bold, color = Slate900) },
             text = {
                 OutlinedTextField(
                     value = newProfileName,
@@ -286,12 +286,14 @@ fun MainScreen(viewModel: MainViewModel) {
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Slate900,
+                        focusedBorderColor = GreenPrimary,
                         unfocusedBorderColor = GrayBorder,
-                        focusedLabelColor = Slate900,
+                        focusedLabelColor = GreenPrimary,
                         unfocusedLabelColor = Slate600,
-                        unfocusedContainerColor = BlueInputBg,
-                        focusedContainerColor = BlueInputBg
+                        unfocusedContainerColor = White,
+                        focusedContainerColor = White,
+                        focusedTextColor = Slate900,
+                        unfocusedTextColor = Slate900
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -309,10 +311,11 @@ fun MainScreen(viewModel: MainViewModel) {
             },
             dismissButton = {
                 TextButton(onClick = { showAddProfileDialog = false }) {
-                    Text("ANNULLA")
+                    Text("ANNULLA", color = Slate600)
                 }
             },
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(16.dp),
+            containerColor = White
         )
     }
 }

@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -87,8 +88,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     @OptIn(ExperimentalCoroutinesApi::class)
     val sentRequests: StateFlow<List<SentRequest>> = _activeProfileId
         .flatMapLatest { id ->
-            if (id != null) sentRequestRepository.getSentRequestsByProfile(id)
-            else flowOf(emptyList())
+            if (id != null) {
+                sentRequestRepository.getSentRequestsByProfile(id)
+                    .map { list -> 
+                        // If Dao order is alphabetical/insertion, we force a descending sort here
+                        // by ID or by parsing the date, but safest is to rely on DAO or reverse if needed.
+                        // Actually the DAO says ORDER BY data DESC, but since 'data' is a formatted string 
+                        // like "15 Giugno 2026", alphabetical DESC might not be correct chronological.
+                        // Let's reverse the list to ensure the latest added is first if DAO sort fails.
+                        list.reversed() 
+                    }
+            } else flowOf(emptyList())
         }
         .stateIn(
             scope = viewModelScope,
@@ -237,10 +247,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 intent
             }
             2 -> { // Email
+                val subject = "Richiesta Farmaci: ${currentSettings.pazienteNome}"
+                val mailto = "mailto:${currentSettings.medicoEmail}?" +
+                        "subject=${Uri.encode(subject)}&" +
+                        "body=${Uri.encode(message)}"
+                
                 val intent = Intent(Intent.ACTION_SENDTO)
-                intent.data = Uri.parse("mailto:${currentSettings.medicoEmail}")
-                intent.putExtra(Intent.EXTRA_SUBJECT, "Richiesta Farmaci: ${currentSettings.pazienteNome}")
-                intent.putExtra(Intent.EXTRA_TEXT, message)
+                intent.data = Uri.parse(mailto)
                 intent
             }
             else -> null
