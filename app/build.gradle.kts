@@ -24,7 +24,7 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     ksp {
-      arg("room.schemaLocation", "$projectDir/schemas")
+      arg("room.schemaLocation", "${project.projectDir}/schemas")
     }
   }
 
@@ -53,12 +53,12 @@ android {
     }
     debug {
     }
+  }
 
-    applicationVariants.all {
-      outputs.all {
-        val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-        output.outputFileName = "RichFarmaci.apk"
-      }
+  applicationVariants.all {
+    outputs.all {
+      val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+      output.outputFileName = "RichFarmaci.apk"
     }
   }
 
