@@ -23,9 +23,6 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    ksp {
-      arg("room.schemaLocation", "${project.projectDir}/schemas")
-    }
   }
 
   signingConfigs {
@@ -83,6 +80,11 @@ android {
       assets.srcDirs(file("$projectDir/schemas"))
     }
   }
+}
+
+// Configurazione KSP per Room
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
