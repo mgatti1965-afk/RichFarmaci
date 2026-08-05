@@ -2,11 +2,14 @@ package com.example.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.Intent
+import android.net.Uri
 import android.provider.ContactsContract
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -54,6 +59,14 @@ fun SettingsPanelContent(
     var showAddProfileDialog by remember { mutableStateOf(false) }
     var newProfileName by remember { mutableStateOf("") }
     var showHelp by remember { mutableStateOf(false) }
+    var showWarningBanner by remember { mutableStateOf(false) }
+
+    LaunchedEffect(showWarningBanner) {
+        if (showWarningBanner) {
+            kotlinx.coroutines.delay(3500)
+            showWarningBanner = false
+        }
+    }
 
     if (showHelp) {
         HelpDialog(type = "configurazione", onDismiss = { showHelp = false })
@@ -113,7 +126,7 @@ fun SettingsPanelContent(
         if (exitAttempted) {
             onClose()
         } else {
-            Toast.makeText(context, "Modifiche non salvate. Premi ancora per uscire.", Toast.LENGTH_LONG).show()
+            showWarningBanner = true
             exitAttempted = true
         }
     }
@@ -219,7 +232,7 @@ fun SettingsPanelContent(
                     IconButton(
                         onClick = { 
                             if (hasChanges && !exitAttempted) {
-                                Toast.makeText(context, "Modifiche non salvate. Premi ancora per uscire.", Toast.LENGTH_LONG).show()
+                                showWarningBanner = true
                                 exitAttempted = true
                             } else {
                                 onClose()
@@ -481,5 +494,31 @@ fun SettingsPanelContent(
                 }
             }
         )
+    }
+
+    AnimatedVisibility(
+        visible = showWarningBanner,
+        enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+        exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize().padding(bottom = 90.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                color = Color.Red,
+                shape = RoundedCornerShape(24.dp),
+                shadowElevation = 6.dp
+            ) {
+                Text(
+                    text = "Modifiche non salvate. Premi ancora per uscire.",
+                    color = White,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 }

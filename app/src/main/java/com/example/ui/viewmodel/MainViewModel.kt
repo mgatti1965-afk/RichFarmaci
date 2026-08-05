@@ -106,6 +106,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = emptyList()
         )
 
+    private val _donationCount = MutableStateFlow(settingsManager.getDonationCount())
+    val donationCount: StateFlow<Int> = _donationCount.asStateFlow()
+
+    fun incrementDonationCount() {
+        settingsManager.incrementDonationCount()
+        _donationCount.value = settingsManager.getDonationCount()
+    }
+
     // User selection states for the active request form
     private val _selectedMedicationIds = MutableStateFlow<Set<String>>(emptySet())
     val selectedMedicationIds: StateFlow<Set<String>> = _selectedMedicationIds.asStateFlow()

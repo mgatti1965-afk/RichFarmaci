@@ -46,8 +46,10 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                         HelpItem("Seleziona i farmaci cliccando sul loro nome.")
                         HelpItem("Regola il numero di scatole con i tasti + e -.")
                         HelpItem("Premi 'Invia al Medico' per trasmettere l'ordine.")
+                        HelpItem("Se desideri sostenere il progetto, clicca sull'icona ☕ in alto a destra.")
                     }
                     "cronologia" -> {
+                        HelpItem("Le richieste sono visualizzate in ordine cronologico, dalla più recente alla più vecchia.")
                         HelpItem("Seleziona il paziente tramite la barra azzurra in alto per vederne lo storico specifico.")
                         HelpItem("Usa 'Visualizza' per leggere il testo completo del messaggio inviato.")
                         HelpItem("Puoi eliminare le vecchie richieste usando l'icona del cestino.")

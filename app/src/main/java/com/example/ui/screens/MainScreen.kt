@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -25,6 +27,7 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,10 +50,77 @@ fun MainScreen(viewModel: MainViewModel) {
     val profiles by viewModel.profiles.collectAsState()
     val activeProfile by viewModel.activeProfile.collectAsState()
     val showSettings by viewModel.showSettings.collectAsState()
+    val donationCount by viewModel.donationCount.collectAsState()
     var showAddProfileDialog by remember { mutableStateOf(false) }
     var newProfileName by remember { mutableStateOf("") }
     var helpType by remember { mutableStateOf<String?>(null) }
     var viewingRequestText by remember { mutableStateOf<String?>(null) }
+    var showDonationDialog by remember { mutableStateOf(false) }
+
+    if (showDonationDialog) {
+        val isBlocked = donationCount >= 2
+        val hasWarning = donationCount == 1
+
+        AlertDialog(
+            onDismissRequest = { showDonationDialog = false },
+            title = { 
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = if (isBlocked) "Grazie di cuore! ☕" else "Offri un caffè ☕",
+                        fontWeight = FontWeight.Bold, 
+                        fontSize = 20.sp, 
+                        color = Slate900
+                    )
+                }
+            },
+            text = {
+                Column {
+                    if (hasWarning) {
+                        Text(
+                            "ATTENZIONE: Hai già effettuato una donazione in precedenza.\n",
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                    }
+                    Text(
+                        text = if (isBlocked) 
+                            "Hai già sostenuto il progetto il numero massimo di volte. Ti ringraziamo immensamente per il tuo supporto!"
+                            else "Sostieni lo sviluppo di RichFarmaci con 5€ per un buon caffè.\n\nVerrai reindirizzato su una pagina sicura gestita da PayPal dove potrai scegliere:\n• Se hai un account PayPal, usalo per pagare velocemente.\n• Se NON hai un account, potrai pagare comodamente con la tua carta di credito o prepagata cliccando su 'Paga con una carta'.",
+                        fontSize = 16.sp,
+                        color = Slate900
+                    )
+                }
+            },
+            confirmButton = {
+                if (!isBlocked) {
+                    Button(
+                        onClick = {
+                            showDonationDialog = false
+                            viewModel.incrementDonationCount()
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=marco.gatti65@alice.it&amount=5.00&currency_code=EUR&item_name=Offerta%20Caffe%20RichFarmaci&solution_type=Sole"))
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("SOSTIENI CON 5€", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDonationDialog = false },
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Text(if (isBlocked) "CHIUDI" else "ANNULLA", color = Slate600)
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = White
+        )
+    }
 
     if (helpType != null) {
         HelpDialog(type = helpType!!, onDismiss = { helpType = null })
@@ -103,6 +173,12 @@ fun MainScreen(viewModel: MainViewModel) {
                         )
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IconButton(
+                            onClick = { showDonationDialog = true },
+                            modifier = Modifier.background(GrayBackground, CircleShape)
+                        ) {
+                            Text(text = "☕", fontSize = 20.sp)
+                        }
                         IconButton(
                             onClick = { helpType = if (currentTab == 0) "richiesta" else "cronologia" },
                             modifier = Modifier.background(GrayBackground, CircleShape)

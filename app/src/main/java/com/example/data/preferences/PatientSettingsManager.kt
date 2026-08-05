@@ -70,4 +70,13 @@ class PatientSettingsManager(context: Context) {
     fun setActiveProfileId(id: String?) {
         prefs.edit().putString("active_profile_id", id).apply()
     }
+
+    fun getDonationCount(): Int {
+        return prefs.getInt("donation_count", 0)
+    }
+
+    fun incrementDonationCount() {
+        val current = getDonationCount()
+        prefs.edit().putInt("donation_count", current + 1).apply()
+    }
 }

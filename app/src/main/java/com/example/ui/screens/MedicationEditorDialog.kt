@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import android.widget.Toast
+import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,6 +50,14 @@ fun MedicationEditorDialog(
 
     var exitAttempted by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showWarningBanner by remember { mutableStateOf(false) }
+
+    LaunchedEffect(showWarningBanner) {
+        if (showWarningBanner) {
+            kotlinx.coroutines.delay(3500)
+            showWarningBanner = false
+        }
+    }
 
     val hasChanges = remember(medication, nome, scatole, note, notificaAttiva, orarioNotifica, frequenzaValore, frequenzaTipo) {
         if (medication == null) {
@@ -66,7 +75,7 @@ fun MedicationEditorDialog(
 
     val handleDismiss = {
         if (hasChanges && !exitAttempted) {
-            Toast.makeText(context, "Modifiche non salvate. Premi ancora la 'X' per uscire.", Toast.LENGTH_LONG).show()
+            showWarningBanner = true
             exitAttempted = true
         } else {
             onDismiss()
@@ -335,6 +344,32 @@ fun MedicationEditorDialog(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("SALVA", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = showWarningBanner,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(bottom = 20.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Surface(
+                    color = Color.Red,
+                    shape = RoundedCornerShape(24.dp),
+                    shadowElevation = 6.dp
+                ) {
+                    Text(
+                        text = "Modifiche non salvate. Premi ancora la 'X' per uscire.",
+                        color = White,
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
