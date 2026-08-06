@@ -98,7 +98,7 @@ fun MainScreen(viewModel: MainViewModel) {
                         onClick = {
                             showDonationDialog = false
                             viewModel.incrementDonationCount()
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=marco.gatti65@alice.it&amount=5.00&currency_code=EUR&item_name=Offerta%20Caffe%20RichFarmaci&solution_type=Sole"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=marco.gatti65@alice.it&amount=5.00&currency_code=EUR&item_name=Offerta%20Caffe%20RichFarmaci&solution_type=Sole&landing_page=Billing"))
                             context.startActivity(intent)
                         },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
