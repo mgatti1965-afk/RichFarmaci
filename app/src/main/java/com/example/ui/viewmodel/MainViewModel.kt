@@ -109,6 +109,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _donationCount = MutableStateFlow(settingsManager.getDonationCount())
     val donationCount: StateFlow<Int> = _donationCount.asStateFlow()
 
+    private val _onboardingShown = MutableStateFlow(settingsManager.isOnboardingShown())
+    val onboardingShown: StateFlow<Boolean> = _onboardingShown.asStateFlow()
+
+    fun setOnboardingShown(shown: Boolean) {
+        settingsManager.setOnboardingShown(shown)
+        _onboardingShown.value = shown
+    }
+
     fun incrementDonationCount() {
         settingsManager.incrementDonationCount()
         _donationCount.value = settingsManager.getDonationCount()
@@ -130,6 +138,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             migrateFromSharedPreferencesIfNeeded()
             
+            // Se l'app è già configurata, segniamo l'onboarding come già visto
+            if (settingsManager.isConfigured()) {
+                settingsManager.setOnboardingShown(true)
+                _onboardingShown.value = true
+            }
+
             // Select first profile on startup
             val currentProfiles = db.profileDao().getAllProfilesSnapshot()
             if (currentProfiles.isNotEmpty()) {

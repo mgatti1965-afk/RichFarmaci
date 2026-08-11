@@ -79,4 +79,12 @@ class PatientSettingsManager(context: Context) {
         val current = getDonationCount()
         prefs.edit().putInt("donation_count", current + 1).apply()
     }
+
+    fun isOnboardingShown(): Boolean {
+        return prefs.getBoolean("onboarding_shown", false)
+    }
+
+    fun setOnboardingShown(shown: Boolean) {
+        prefs.edit().putBoolean("onboarding_shown", shown).apply()
+    }
 }

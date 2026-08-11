@@ -56,6 +56,11 @@ fun SettingsPanelContent(
     val context = LocalContext.current
     val profiles by viewModel.profiles.collectAsState()
     val activeProfile by viewModel.activeProfile.collectAsState()
+    val onboardingShown by viewModel.onboardingShown.collectAsState()
+    
+    // Mostra l'onboarding solo se non è mai stato mostrato E se non c'è già un profilo configurato
+    var showOnboarding by remember(onboardingShown) { mutableStateOf(!onboardingShown) }
+
     var showAddProfileDialog by remember { mutableStateOf(false) }
     var newProfileName by remember { mutableStateOf("") }
     var showHelp by remember { mutableStateOf(false) }
@@ -70,6 +75,15 @@ fun SettingsPanelContent(
 
     if (showHelp) {
         HelpDialog(type = "configurazione", onDismiss = { showHelp = false })
+    }
+
+    if (showOnboarding) {
+        OnboardingDialog(
+            onDismiss = {
+                showOnboarding = false
+                viewModel.setOnboardingShown(true)
+            }
+        )
     }
 
     var pNome by remember(settings) { mutableStateOf(settings.pazienteNome) }
@@ -87,26 +101,6 @@ fun SettingsPanelContent(
     var exitAttempted by remember(settings) { mutableStateOf(false) }
     val profileId by viewModel.activeProfileId.collectAsState()
     val isNewProfile = profileId == null
-
-    if (pCf == "!!!" || pCf == "!!! ") {
-        AlertDialog(
-            onDismissRequest = { pCf = "" },
-            title = { Text("⚠️ RESET TOTALE", color = Color.Red, fontWeight = FontWeight.Bold) },
-            text = { Text("Sei sicuro di voler eliminare TUTTI i dati? Questa operazione cancellerà ogni profilo e ogni farmaco salvato e non è reversibile.") },
-            confirmButton = {
-                Button(
-                    onClick = { 
-                        viewModel.resetEverything()
-                        onClose()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) { Text("ELIMINA TUTTO", color = White) }
-            },
-            dismissButton = {
-                TextButton(onClick = { pCf = "" }) { Text("ANNULLA") }
-            }
-        )
-    }
 
     val hasChanges = remember(pNome, pCf, mNome, mTel, mEmail, secInd, msgTesta, msgCoda, valType, nAttive, nDesc) {
         pNome != settings.pazienteNome ||
@@ -390,7 +384,6 @@ fun SettingsPanelContent(
                             viewModel.savePatientSettings(PatientSettings(pazienteNome = pNome, pazienteCf = pCf, medicoNome = mNome, medicoTelefono = mTel, medicoEmail = mEmail, secondoIndirizzo = secInd, messaggioTesta = msgTesta, messaggioCoda = msgCoda, tipoInvio = valType, notificheAttive = nAttive, descrizioneNotifica = nDesc))
                             Toast.makeText(context, "Profilo salvato correttamente!", Toast.LENGTH_SHORT).show()
                             exitAttempted = false // Reset exit flag on success
-                            onClose()
                         } else {
                             Toast.makeText(context, "Attenzione: Compila tutti i campi obbligatori segnati con (*)", Toast.LENGTH_LONG).show()
                         }

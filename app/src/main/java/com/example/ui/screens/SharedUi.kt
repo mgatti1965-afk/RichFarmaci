@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,6 +68,59 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
         confirmButton = { TextButton(onClick = onDismiss) { Text("Ho capito", color = GreenPrimary, fontWeight = FontWeight.Bold) } },
         shape = RoundedCornerShape(16.dp),
         containerColor = GrayBackground
+    )
+}
+
+@Composable
+fun OnboardingDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                PharmacyCross(modifier = Modifier.size(40.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Benvenuto in RichFarmaci! 🏥",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Slate900,
+                    textAlign = TextAlign.Center
+                )
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "Configura il tuo primo profilo in pochi passi:",
+                    fontWeight = FontWeight.SemiBold,
+                    color = Slate900
+                )
+                HelpItem("Inserisci il tuo Nome e Codice Fiscale (necessario per le ricette).")
+                HelpItem("Inserisci i dati del tuo Medico (Telefono o Email).")
+                HelpItem("Personalizza, se vuoi, i messaggi di richiesta.")
+                HelpItem("Dopo il salvataggio, potrai aggiungere i tuoi Farmaci abituali.")
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Tutti i dati rimangono salvati esclusivamente sul tuo telefono.",
+                    fontSize = 13.sp,
+                    color = Slate600,
+                    lineHeight = 18.sp
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("INIZIAMO", color = White, fontWeight = FontWeight.Bold)
+            }
+        },
+        shape = RoundedCornerShape(20.dp),
+        containerColor = White
     )
 }
 

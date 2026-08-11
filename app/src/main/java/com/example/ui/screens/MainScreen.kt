@@ -77,7 +77,7 @@ fun MainScreen(viewModel: MainViewModel) {
                 Column {
                     if (hasWarning) {
                         Text(
-                            "ATTENZIONE: Hai già effettuato una donazione in precedenza.\n",
+                            "ATTENZIONE: Hai già sostenuto il progetto in precedenza.\n",
                             color = Color.Red,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
@@ -86,7 +86,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     Text(
                         text = if (isBlocked) 
                             "Hai già sostenuto il progetto il numero massimo di volte. Ti ringraziamo immensamente per il tuo supporto!"
-                            else "Sostieni lo sviluppo di RichFarmaci con 5€ per un buon caffè.\n\nVerrai reindirizzato su una pagina sicura gestita da PayPal dove potrai scegliere:\n• Se hai un account PayPal, usalo per pagare velocemente.\n• Se NON hai un account, potrai pagare comodamente con la tua carta di credito o prepagata cliccando su 'Paga con una carta'.",
+                            else "Sostieni lo sviluppo di RichFarmaci con un contributo di 5€ per un buon caffè.\n\nVerrai reindirizzato su una pagina sicura gestita da PayPal dove potrai scegliere:\n• Se hai un account PayPal, usalo per procedere velocemente.\n• Se NON hai un account, potrai procedere comodamente con la tua carta di credito o prepagata cliccando su 'Paga con una carta'.",
                         fontSize = 16.sp,
                         color = Slate900
                     )
