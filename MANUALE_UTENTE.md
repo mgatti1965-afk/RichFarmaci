@@ -34,12 +34,16 @@ Durante l'installazione potresti vedere questi messaggi:
 
 ## ⚙️ 3. Prima Configurazione
 
-Al primo avvio, l'app ti guiderà nella configurazione del tuo profilo. È un passaggio fondamentale per permettere a RichFarmaci di compilare correttamente le tue richieste.
+Al primo avvio, l'app ti accoglierà con un messaggio di benvenuto e ti guiderà nella configurazione del tuo profilo. È un passaggio fondamentale: senza questi dati, l'app non potrà generare le richieste per il tuo medico.
 
-1.  **Dati Paziente**: Inserisci il tuo Nome e il tuo Codice Fiscale (necessario affinché il medico possa emettere le ricette).
-2.  **Dati Medico**: Inserisci il nome del tuo medico e il suo recapito (Telefono o Email). Puoi anche importare questi dati direttamente dalla tua rubrica cliccando su "Scegli".
-3.  **Personalizzazione**: Se lo desideri, puoi modificare i messaggi predefiniti di "testa" (saluti iniziali) e di "coda" (saluti finali).
-4.  **Salvataggio**: Clicca su **"SALVA CONFIGURAZIONE"**. Solo dopo il primo salvataggio apparirà la sezione per aggiungere i tuoi farmaci abituali.
+1.  **Dati Paziente**: Inserisci il tuo Nome, Cognome e Codice Fiscale.
+2.  **Dati Medico**: Inserisci il nome del medico e il suo recapito (Cellulare o Email). Puoi usare il tasto **"SCEGLI"** per cercarlo velocemente nella tua rubrica telefonica.
+3.  **Personalizzazione**: Puoi modificare i messaggi di apertura e chiusura che verranno inviati al medico.
+4.  **Salvataggio**: Clicca sul tasto rosso **"SALVA CONFIGURAZIONE"**. 
+
+> 💡 **Nota Visiva**: Se modifichi un dato in questa schermata, apparirà un **bordo rosso lampeggiante** attorno alle sezioni 1 e 2. Questo segnale serve a ricordarti che ci sono modifiche in corso che andranno perse se non clicchi su "Salva".
+
+**Importante**: La sezione per aggiungere i farmaci (punto 3 della schermata) apparirà solo dopo che avrai salvato il profilo per la prima volta.
 
 ---
 

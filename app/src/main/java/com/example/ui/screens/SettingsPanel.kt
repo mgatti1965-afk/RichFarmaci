@@ -9,9 +9,11 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.*
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -115,6 +117,18 @@ fun SettingsPanelContent(
         nAttive != settings.notificheAttive ||
         nDesc != settings.descrizioneNotifica
     }
+
+    // Animazione per il bordo rosso pulsante
+    val infiniteTransition = rememberInfiniteTransition(label = "pulsingBorder")
+    val borderAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "borderAlpha"
+    )
 
     BackHandler(enabled = hasChanges) {
         if (exitAttempted) {
@@ -253,153 +267,165 @@ fun SettingsPanelContent(
                 HorizontalDivider(color = GrayBorder, modifier = Modifier.padding(top = 8.dp))
             }
 
-            item { Text(text = "1. Anagrafica Paziente e Medico", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900) }
             item {
-                OutlinedTextField(
-                    value = pNome,
-                    onValueChange = { pNome = it.capitalizeWords() },
-                    label = { Text("Nome e Cognome Paziente (*)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = GreenPrimary,
-                        unfocusedBorderColor = GrayBorder,
-                        focusedLabelColor = GreenPrimary,
-                        unfocusedLabelColor = Slate600,
-                        unfocusedContainerColor = White,
-                        focusedContainerColor = White,
-                        focusedTextColor = Slate900,
-                        unfocusedTextColor = Slate900
-                    ),
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
-            item {
-                OutlinedTextField(
-                    value = pCf,
-                    onValueChange = { pCf = it.uppercase() },
-                    label = { Text("Codice Fiscale (*)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = GreenPrimary,
-                        unfocusedBorderColor = GrayBorder,
-                        focusedLabelColor = GreenPrimary,
-                        unfocusedLabelColor = Slate600,
-                        unfocusedContainerColor = White,
-                        focusedContainerColor = White,
-                        focusedTextColor = Slate900,
-                        unfocusedTextColor = Slate900
-                    ),
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
-            item {
-                Card(colors = CardDefaults.cardColors(containerColor = GreenLightBg), border = BorderStroke(1.2.dp, GreenPrimary), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
-                    Row(modifier = Modifier.padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Importa Medico da Rubrica", fontWeight = FontWeight.Bold, color = Slate900)
-                            Text("Seleziona dal telefono il contatto del medico", fontSize = 13.sp, color = Slate600)
-                        }
-                        Button(onClick = {
-                            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) pickContactLauncher.launch(null)
-                            else permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                        }, colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)) { Text("SCEGLI", color = White) }
-                    }
-                }
-            }
-            item { OutlinedTextField(value = mNome, onValueChange = { mNome = it.capitalizeWords() }, label = { Text("Nome Medico (*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp)) }
-            item { OutlinedTextField(value = mTel, onValueChange = { mTel = it }, label = { Text("Cellulare Medico (o Email*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp)) }
-            item { OutlinedTextField(value = mEmail, onValueChange = { mEmail = it }, label = { Text("Email Medico (o Cellulare*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp)) }
-            item { OutlinedTextField(value = secInd, onValueChange = { secInd = it }, label = { Text("Note recapito (Opzionale)") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp)) }
-            
-            item {
-                HorizontalDivider(color = GrayBorder)
-                Text(text = "2. Opzioni Messaggio", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900, modifier = Modifier.padding(top = 10.dp))
-            }
-            item { OutlinedTextField(value = msgTesta, onValueChange = { msgTesta = it }, label = { Text("Frase di Testa") }, modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp)) }
-            item { OutlinedTextField(value = msgCoda, onValueChange = { msgCoda = it }, label = { Text("Frase di Coda") }, modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp)) }
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Tipo Invio Predefinito:", fontWeight = FontWeight.Bold, color = Slate900)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf("WhatsApp", "SMS", "Email").forEachIndexed { index, label ->
-                            val selected = valType == index
-                            Surface(
-                                modifier = Modifier.weight(1f).height(48.dp).clickable { valType = index },
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (selected) (if (index == 0) GreenPrimary else if (index == 1) Slate900 else Color(0xFF6366F1)) else White,
-                                border = if (!selected) BorderStroke(1.dp, GrayBorder) else null
-                            ) { Box(contentAlignment = Alignment.Center) { Text(label, color = if (selected) White else Slate600, fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal) } }
-                        }
-                    }
-                }
-            }
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text = "Attiva Notifiche", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900)
-                        Switch(
-                            checked = nAttive,
-                            onCheckedChange = { nAttive = it },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = White,
-                                checkedTrackColor = GreenPrimary,
-                                uncheckedThumbColor = White,
-                                uncheckedTrackColor = GrayBorder
-                            )
-                        )
-                    }
-                    if (nAttive) {
-                        OutlinedTextField(
-                            value = nDesc,
-                            onValueChange = { nDesc = it.capitalizeWords() },
-                            label = { Text("Descrizione Notifica") },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = GreenPrimary,
-                                unfocusedBorderColor = GrayBorder,
-                                focusedLabelColor = GreenPrimary,
-                                unfocusedLabelColor = Slate600,
-                                unfocusedContainerColor = White,
-                                focusedContainerColor = White,
-                                focusedTextColor = Slate900,
-                                unfocusedTextColor = Slate900
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                    }
-                }
-            }
-            item {
-                val formsFilled = pNome.isNotBlank() && pCf.isNotBlank() && mNome.isNotBlank() && ((valType == 2 && mEmail.isNotBlank()) || (valType != 2 && mTel.isNotBlank()))
-                
-                Button(
-                    onClick = {
-                        if (formsFilled) {
-                            viewModel.savePatientSettings(PatientSettings(pazienteNome = pNome, pazienteCf = pCf, medicoNome = mNome, medicoTelefono = mTel, medicoEmail = mEmail, secondoIndirizzo = secInd, messaggioTesta = msgTesta, messaggioCoda = msgCoda, tipoInvio = valType, notificheAttive = nAttive, descrizioneNotifica = nDesc))
-                            Toast.makeText(context, "Profilo salvato correttamente!", Toast.LENGTH_SHORT).show()
-                            exitAttempted = false // Reset exit flag on success
-                        } else {
-                            Toast.makeText(context, "Attenzione: Compila tutti i campi obbligatori segnati con (*)", Toast.LENGTH_LONG).show()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(60.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (formsFilled) Color(0xFFD32F2F) else Color.Gray
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    enabled = hasChanges || isNewProfile
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (hasChanges) Modifier
+                                .border(
+                                    width = 3.dp,
+                                    color = Color.Red.copy(alpha = borderAlpha),
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .padding(12.dp)
+                            else Modifier
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text(
-                        if (formsFilled) "SALVA CONFIGURAZIONE" else "COMPILA CAMPI OBBLIGATORI (*)",
-                        fontWeight = FontWeight.Bold,
-                        color = White
+                    Text(text = "1. Anagrafica Paziente e Medico", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900)
+                    
+                    OutlinedTextField(
+                        value = pNome,
+                        onValueChange = { pNome = it.capitalizeWords() },
+                        label = { Text("Nome e Cognome Paziente (*)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = GreenPrimary,
+                            unfocusedBorderColor = GrayBorder,
+                            focusedLabelColor = GreenPrimary,
+                            unfocusedLabelColor = Slate600,
+                            unfocusedContainerColor = White,
+                            focusedContainerColor = White,
+                            focusedTextColor = Slate900,
+                            unfocusedTextColor = Slate900
+                        ),
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                        shape = RoundedCornerShape(12.dp)
                     )
+                    
+                    OutlinedTextField(
+                        value = pCf,
+                        onValueChange = { pCf = it.uppercase() },
+                        label = { Text("Codice Fiscale (*)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = GreenPrimary,
+                            unfocusedBorderColor = GrayBorder,
+                            focusedLabelColor = GreenPrimary,
+                            unfocusedLabelColor = Slate600,
+                            unfocusedContainerColor = White,
+                            focusedContainerColor = White,
+                            focusedTextColor = Slate900,
+                            unfocusedTextColor = Slate900
+                        ),
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Card(colors = CardDefaults.cardColors(containerColor = GreenLightBg), border = BorderStroke(1.2.dp, GreenPrimary), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Importa Medico da Rubrica", fontWeight = FontWeight.Bold, color = Slate900)
+                                Text("Seleziona dal telefono il contatto del medico", fontSize = 13.sp, color = Slate600)
+                            }
+                            Button(onClick = {
+                                if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) pickContactLauncher.launch(null)
+                                else permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                            }, colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)) { Text("SCEGLI", color = White) }
+                        }
+                    }
+
+                    OutlinedTextField(value = mNome, onValueChange = { mNome = it.capitalizeWords() }, label = { Text("Nome Medico (*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp))
+                    OutlinedTextField(value = mTel, onValueChange = { mTel = it }, label = { Text("Cellulare Medico (o Email*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp))
+                    OutlinedTextField(value = mEmail, onValueChange = { mEmail = it }, label = { Text("Email Medico (o Cellulare*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp))
+                    OutlinedTextField(value = secInd, onValueChange = { secInd = it }, label = { Text("Note recapito (Opzionale)") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp))
+                    
+                    HorizontalDivider(color = GrayBorder)
+                    Text(text = "2. Opzioni Messaggio", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900, modifier = Modifier.padding(top = 10.dp))
+                    
+                    OutlinedTextField(value = msgTesta, onValueChange = { msgTesta = it }, label = { Text("Frase di Testa") }, modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp))
+                    OutlinedTextField(value = msgCoda, onValueChange = { msgCoda = it }, label = { Text("Frase di Coda") }, modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp))
+                    
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Tipo Invio Predefinito:", fontWeight = FontWeight.Bold, color = Slate900)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf("WhatsApp", "SMS", "Email").forEachIndexed { index, label ->
+                                val selected = valType == index
+                                Surface(
+                                    modifier = Modifier.weight(1f).height(48.dp).clickable { valType = index },
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (selected) (if (index == 0) GreenPrimary else if (index == 1) Slate900 else Color(0xFF6366F1)) else White,
+                                    border = if (!selected) BorderStroke(1.dp, GrayBorder) else null
+                                ) { Box(contentAlignment = Alignment.Center) { Text(label, color = if (selected) White else Slate600, fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal) } }
+                            }
+                        }
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = "Attiva Notifiche", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900)
+                            Switch(
+                                checked = nAttive,
+                                onCheckedChange = { nAttive = it },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = White,
+                                    checkedTrackColor = GreenPrimary,
+                                    uncheckedThumbColor = White,
+                                    uncheckedTrackColor = GrayBorder
+                                )
+                            )
+                        }
+                        if (nAttive) {
+                            OutlinedTextField(
+                                value = nDesc,
+                                onValueChange = { nDesc = it.capitalizeWords() },
+                                label = { Text("Descrizione Notifica") },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = GreenPrimary,
+                                    unfocusedBorderColor = GrayBorder,
+                                    focusedLabelColor = GreenPrimary,
+                                    unfocusedLabelColor = Slate600,
+                                    unfocusedContainerColor = White,
+                                    focusedContainerColor = White,
+                                    focusedTextColor = Slate900,
+                                    unfocusedTextColor = Slate900
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                        }
+                    }
+
+                    val formsFilled = pNome.isNotBlank() && pCf.isNotBlank() && mNome.isNotBlank() && ((valType == 2 && mEmail.isNotBlank()) || (valType != 2 && mTel.isNotBlank()))
+                    
+                    Button(
+                        onClick = {
+                            if (formsFilled) {
+                                viewModel.savePatientSettings(PatientSettings(pazienteNome = pNome, pazienteCf = pCf, medicoNome = mNome, medicoTelefono = mTel, medicoEmail = mEmail, secondoIndirizzo = secInd, messaggioTesta = msgTesta, messaggioCoda = msgCoda, tipoInvio = valType, notificheAttive = nAttive, descrizioneNotifica = nDesc))
+                                Toast.makeText(context, "Profilo salvato correttamente!", Toast.LENGTH_SHORT).show()
+                                exitAttempted = false // Reset exit flag on success
+                            } else {
+                                Toast.makeText(context, "Attenzione: Compila tutti i campi obbligatori segnati con (*)", Toast.LENGTH_LONG).show()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(60.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (formsFilled) Color(0xFFD32F2F) else Color.Gray
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        enabled = hasChanges || isNewProfile
+                    ) {
+                        Text(
+                            if (formsFilled) "SALVA CONFIGURAZIONE" else "COMPILA CAMPI OBBLIGATORI (*)",
+                            fontWeight = FontWeight.Bold,
+                            color = White
+                        )
+                    }
                 }
             }
 
