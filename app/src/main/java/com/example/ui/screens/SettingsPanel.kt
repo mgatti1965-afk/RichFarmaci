@@ -104,7 +104,7 @@ fun SettingsPanelContent(
     val profileId by viewModel.activeProfileId.collectAsState()
     val isNewProfile = profileId == null
 
-    val hasChanges = remember(pNome, pCf, mNome, mTel, mEmail, secInd, msgTesta, msgCoda, valType, nAttive, nDesc) {
+    val hasChanges = remember(pNome, pCf, mNome, mTel, mEmail, secInd, msgTesta, msgCoda, valType, nAttive, nDesc, settings) {
         pNome != settings.pazienteNome ||
         pCf != settings.pazienteCf ||
         mNome != settings.medicoNome ||
@@ -355,7 +355,7 @@ fun SettingsPanelContent(
                                 Surface(
                                     modifier = Modifier.weight(1f).height(48.dp).clickable { valType = index },
                                     shape = RoundedCornerShape(10.dp),
-                                    color = if (selected) (if (index == 0) GreenPrimary else if (index == 1) Slate900 else Color(0xFF6366F1)) else White,
+                                    color = if (selected) GreenPrimary else White,
                                     border = if (!selected) BorderStroke(1.dp, GrayBorder) else null
                                 ) { Box(contentAlignment = Alignment.Center) { Text(label, color = if (selected) White else Slate600, fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal) } }
                             }
@@ -401,31 +401,61 @@ fun SettingsPanelContent(
                         }
                     }
 
-                    val formsFilled = pNome.isNotBlank() && pCf.isNotBlank() && mNome.isNotBlank() && ((valType == 2 && mEmail.isNotBlank()) || (valType != 2 && mTel.isNotBlank()))
+    val formsFilled = pNome.isNotBlank() && pCf.isNotBlank() && mNome.isNotBlank()
+
+    Button(
+        onClick = {
+            val missingFields = mutableListOf<String>()
+            if (pNome.isBlank()) missingFields.add("Nome Paziente")
+            if (pCf.isBlank()) missingFields.add("Codice Fiscale")
+            if (mNome.isBlank()) missingFields.add("Nome Medico")
+            
+            // Logica specifica per il tipo di invio
+            when (valType) {
+                0 -> { // WhatsApp
+                    if (mTel.isBlank()) missingFields.add("Cellulare Medico")
                     
-                    Button(
-                        onClick = {
-                            if (formsFilled) {
-                                viewModel.savePatientSettings(PatientSettings(pazienteNome = pNome, pazienteCf = pCf, medicoNome = mNome, medicoTelefono = mTel, medicoEmail = mEmail, secondoIndirizzo = secInd, messaggioTesta = msgTesta, messaggioCoda = msgCoda, tipoInvio = valType, notificheAttive = nAttive, descrizioneNotifica = nDesc))
-                                Toast.makeText(context, "Profilo salvato correttamente!", Toast.LENGTH_SHORT).show()
-                                exitAttempted = false // Reset exit flag on success
-                            } else {
-                                Toast.makeText(context, "Attenzione: Compila tutti i campi obbligatori segnati con (*)", Toast.LENGTH_LONG).show()
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(60.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (formsFilled) Color(0xFFD32F2F) else Color.Gray
-                        ),
-                        shape = RoundedCornerShape(16.dp),
-                        enabled = hasChanges || isNewProfile
-                    ) {
-                        Text(
-                            if (formsFilled) "SALVA CONFIGURAZIONE" else "COMPILA CAMPI OBBLIGATORI (*)",
-                            fontWeight = FontWeight.Bold,
-                            color = White
-                        )
+                    // Verifica WhatsApp installato
+                    val isWhatsappInstalled = try {
+                        context.packageManager.getPackageInfo("com.whatsapp", 0)
+                        true
+                    } catch (e: PackageManager.NameNotFoundException) {
+                        false
                     }
+                    if (!isWhatsappInstalled) missingFields.add("Applicazione WhatsApp (non installata)")
+                }
+                1 -> { // SMS
+                    if (mTel.isBlank()) missingFields.add("Cellulare Medico")
+                }
+                2 -> { // Email
+                    if (mTel.isBlank()) missingFields.add("Cellulare Medico")
+                    if (mEmail.isBlank()) missingFields.add("Email Medico")
+                }
+            }
+
+            if (missingFields.isEmpty()) {
+                viewModel.savePatientSettings(PatientSettings(pazienteNome = pNome, pazienteCf = pCf, medicoNome = mNome, medicoTelefono = mTel, medicoEmail = mEmail, secondoIndirizzo = secInd, messaggioTesta = msgTesta, messaggioCoda = msgCoda, tipoInvio = valType, notificheAttive = nAttive, descrizioneNotifica = nDesc))
+                Toast.makeText(context, "Profilo salvato correttamente!", Toast.LENGTH_SHORT).show()
+                exitAttempted = false
+            } else {
+                val errorMsg = "Mancano dati obbligatori:\n" + missingFields.joinToString(", ")
+                Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
+            }
+        },
+        modifier = Modifier.fillMaxWidth().height(60.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (hasChanges) Color(0xFFD32F2F) else Color.Gray,
+            disabledContainerColor = Color.Gray
+        ),
+        shape = RoundedCornerShape(16.dp),
+        enabled = hasChanges
+    ) {
+        Text(
+            "SALVA CONFIGURAZIONE",
+            fontWeight = FontWeight.Bold,
+            color = White
+        )
+    }
                 }
             }
 
@@ -441,7 +471,7 @@ fun SettingsPanelContent(
                             showMedicationDialog = true
                         },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Slate900),
+                        colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, tint = White)

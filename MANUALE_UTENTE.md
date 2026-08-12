@@ -62,6 +62,9 @@ Puoi aggiungere i tuoi farmaci abituali cliccando sul tasto **"+"**. Per ogni fa
 ### 📩 Invio Richieste
 Seleziona i farmaci che desideri ordinare e clicca sull'icona di invio. L'app preparerà un messaggio o una mail con tutti i tuoi dati e l'elenco dei farmaci da inviare direttamente al tuo medico.
 
+### 💬 Messaggio Veloce al Medico
+Nella parte bassa della schermata principale (sopra il tasto di invio) trovi il tasto **"MESSAGGIO VELOCE AL MEDICO"**. Questa funzione ti permette di inviare una comunicazione testuale libera al tuo medico (ad esempio per chiedere un appuntamento o segnalare un sintomo) utilizzando lo stesso metodo di invio (WhatsApp, SMS o Email) configurato nel tuo profilo. L'app aggiungerà automaticamente i tuoi dati identificativi al messaggio.
+
 ### 📜 Cronologia (History)
 Tutte le richieste inviate vengono salvate nella sezione **Cronologia**.
 *   Gli elementi sono ordinati in modo **cronologico inverso** (la richiesta più recente appare sempre in alto).

@@ -56,6 +56,69 @@ fun MainScreen(viewModel: MainViewModel) {
     var helpType by remember { mutableStateOf<String?>(null) }
     var viewingRequestText by remember { mutableStateOf<String?>(null) }
     var showDonationDialog by remember { mutableStateOf(false) }
+    var showQuickMessageDialog by remember { mutableStateOf(false) }
+    var quickMessageText by remember { mutableStateOf("") }
+
+    if (showQuickMessageDialog) {
+        AlertDialog(
+            onDismissRequest = { showQuickMessageDialog = false },
+            title = {
+                Text(
+                    text = "Messaggio veloce al medico",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Slate900
+                )
+            },
+            text = {
+                OutlinedTextField(
+                    value = quickMessageText,
+                    onValueChange = { quickMessageText = it },
+                    placeholder = { Text("Scrivi qui il tuo messaggio...") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = GreenPrimary,
+                        unfocusedBorderColor = GrayBorder,
+                        focusedLabelColor = GreenPrimary,
+                        unfocusedLabelColor = Slate600,
+                        unfocusedContainerColor = White,
+                        focusedContainerColor = White,
+                        focusedTextColor = Slate900,
+                        unfocusedTextColor = Slate900
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (quickMessageText.isNotBlank()) {
+                            val intent = viewModel.generateQuickMessageIntent(quickMessageText)
+                            if (intent != null) {
+                                context.startActivity(intent)
+                                viewModel.recordSentRequest("MESSAGGIO VELOCE:\n$quickMessageText")
+                            }
+                            quickMessageText = ""
+                            showQuickMessageDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("INVIA", color = White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showQuickMessageDialog = false }) {
+                    Text("ANNULLA", color = Slate600)
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = White
+        )
+    }
 
     if (showDonationDialog) {
         val isBlocked = donationCount >= 2
@@ -248,7 +311,7 @@ fun MainScreen(viewModel: MainViewModel) {
                                 columns = GridCells.Fixed(1),
                                 modifier = Modifier.weight(1f),
                                 verticalArrangement = Arrangement.spacedBy(10.dp),
-                                contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp)
+                                contentPadding = PaddingValues(top = 8.dp, bottom = 160.dp)
                             ) {
                                 items(medications.filter { !it.inPausa && it.scatole > 0 }) { med ->
                                     val isSelected = selectedIds.contains(med.id)
@@ -264,14 +327,18 @@ fun MainScreen(viewModel: MainViewModel) {
                             }
                         }
 
-                        // Bottom Send Action
+                        // Bottom Actions
                         val selectedCount = selectedIds.size
-                        Column(modifier = Modifier.align(Alignment.BottomCenter)) {
+                        Column(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             AnimatedVisibility(
                                 visible = selectedCount > 0,
                                 enter = fadeIn() + expandVertically(),
-                                exit = fadeOut() + shrinkVertically(),
-                                modifier = Modifier.padding(16.dp)
+                                exit = fadeOut() + shrinkVertically()
                             ) {
                                 Button(
                                     onClick = {
@@ -298,6 +365,22 @@ fun MainScreen(viewModel: MainViewModel) {
                                         color = White
                                     )
                                 }
+                            }
+
+                            // Tasto Messaggio Veloce (Sempre visibile in fondo)
+                            OutlinedButton(
+                                onClick = { showQuickMessageDialog = true },
+                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, GreenPrimary),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = White.copy(alpha = 0.9f),
+                                    contentColor = GreenPrimary
+                                )
+                            ) {
+                                Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("MESSAGGIO VELOCE AL MEDICO", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             }
                         }
                     } else {

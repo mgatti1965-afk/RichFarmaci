@@ -251,9 +251,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun generateRequestIntent(context: Context): Intent? {
-        val message = buildFormattedMessage()
-        val currentSettings = _settings.value
-        
+        return generateMessageIntent(_settings.value, buildFormattedMessage())
+    }
+
+    fun generateQuickMessageIntent(customText: String): Intent? {
+        val settings = _settings.value
+        // Formattiamo il messaggio veloce includendo i dati del paziente per identificazione
+        val fullMessage = "Messaggio da ${settings.pazienteNome} (CF: ${settings.pazienteCf}):\n\n$customText"
+        return generateMessageIntent(settings, fullMessage)
+    }
+
+    private fun generateMessageIntent(currentSettings: PatientSettings, message: String): Intent? {
         return when (currentSettings.tipoInvio) {
             0 -> { // WhatsApp
                 val intent = Intent(Intent.ACTION_VIEW)
@@ -269,7 +277,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 intent
             }
             2 -> { // Email
-                val subject = "Richiesta Farmaci: ${currentSettings.pazienteNome}"
+                val subject = "Comunicazione da: ${currentSettings.pazienteNome}"
                 val mailto = "mailto:${currentSettings.medicoEmail}?" +
                         "subject=${Uri.encode(subject)}&" +
                         "body=${Uri.encode(message)}"
