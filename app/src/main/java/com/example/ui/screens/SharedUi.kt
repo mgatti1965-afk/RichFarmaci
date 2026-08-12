@@ -44,9 +44,9 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                 when(type) {
                     "richiesta" -> {
                         HelpItem("Scegli il paziente tramite la barra azzurra in alto (se ne gestisci più di uno).")
-                        HelpItem("Seleziona i farmaci cliccando sul loro nome.")
-                        HelpItem("Regola il numero di scatole con i tasti + e -.")
-                        HelpItem("Premi 'Invia al Medico' per trasmettere l'ordine.")
+                        HelpItem("Seleziona i farmaci cliccando sul loro nome e regola le scatole con + e -.")
+                        HelpItem("Premi 'Invia al Medico' per trasmettere l'ordine dei farmaci selezionati.")
+                        HelpItem("In aggiunta, puoi usare 'Messaggio veloce al Medico' per comunicazioni extra (es. febbre o appuntamenti).")
                         HelpItem("Se desideri sostenere il progetto, clicca sull'icona ☕ in alto a destra.")
                     }
                     "cronologia" -> {
@@ -56,11 +56,12 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                         HelpItem("Puoi eliminare le vecchie richieste usando l'icona del cestino.")
                     }
                     "configurazione" -> {
-                        HelpItem("Usa la barra azzurra superiore per aggiungere nuovi pazienti o eliminare quelli esistenti.")
-                        HelpItem("Inserisci il Codice Fiscale del paziente selezionato per la ricetta elettronica.")
-                        HelpItem("Configura i dati del medico (puoi importarli dalla rubrica con il tasto 'Scegli').")
-                        HelpItem("Aggiungi i farmaci abituali (se imposti 0 scatole, il farmaco rimarrà in lista solo per le notifiche).")
-                        HelpItem("Attiva le notifiche per ricordarti di assumere i farmaci.")
+                        HelpItem("Usa la barra azzurra superiore per gestire i profili dei pazienti (aggiungi o elimina).")
+                        HelpItem("Inserisci i dati del Paziente (Nome e Codice Fiscale).")
+                        HelpItem("Inserisci i dati del Medico. Puoi importarli dalla rubrica con il tasto 'SCEGLI'.")
+                        HelpItem("Scegli il metodo di invio (il tasto selezionato ha il bordo verde, gli altri sono verdi).")
+                        HelpItem("Premi 'SALVA CONFIGURAZIONE' (il tasto è rosso se ci sono modifiche e torna grigio quando salvato).")
+                        HelpItem("Sotto la sezione salvataggio, aggiungi i farmaci abituali e attiva le notifiche.")
                     }
                 }
             }

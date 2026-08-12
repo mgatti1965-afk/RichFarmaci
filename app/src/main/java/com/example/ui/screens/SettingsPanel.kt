@@ -355,9 +355,17 @@ fun SettingsPanelContent(
                                 Surface(
                                     modifier = Modifier.weight(1f).height(48.dp).clickable { valType = index },
                                     shape = RoundedCornerShape(10.dp),
-                                    color = if (selected) GreenPrimary else White,
-                                    border = if (!selected) BorderStroke(1.dp, GrayBorder) else null
-                                ) { Box(contentAlignment = Alignment.Center) { Text(label, color = if (selected) White else Slate600, fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal) } }
+                                    color = if (selected) White else GreenPrimary,
+                                    border = BorderStroke(1.5.dp, if (selected) GreenPrimary else Color.Transparent)
+                                ) { 
+                                    Box(contentAlignment = Alignment.Center) { 
+                                        Text(
+                                            label, 
+                                            color = if (selected) GreenPrimary else White, 
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                        ) 
+                                    } 
+                                }
                             }
                         }
                     }

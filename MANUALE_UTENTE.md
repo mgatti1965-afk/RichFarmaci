@@ -38,32 +38,32 @@ Al primo avvio, l'app ti accoglierà con un messaggio di benvenuto e ti guiderà
 
 1.  **Dati Paziente**: Inserisci il tuo Nome, Cognome e Codice Fiscale.
 2.  **Dati Medico**: Inserisci il nome del medico e il suo recapito (Cellulare o Email). Puoi usare il tasto **"SCEGLI"** per cercarlo velocemente nella tua rubrica telefonica.
-3.  **Personalizzazione**: Puoi modificare i messaggi di apertura e chiusura che verranno inviati al medico.
+3.  **Personalizzazione**: Puoi scegliere il **metodo di invio preferito** (WhatsApp, SMS o Email) e personalizzare i messaggi di apertura e chiusura. Il metodo selezionato apparirà **chiaro con bordo verde**, mentre gli altri saranno di colore verde.
 4.  **Salvataggio**: Clicca sul tasto rosso **"SALVA CONFIGURAZIONE"**. 
 
-> 💡 **Nota Visiva**: Se modifichi un dato in questa schermata, apparirà un **bordo rosso lampeggiante** attorno alle sezioni 1 e 2. Questo segnale serve a ricordarti che ci sono modifiche in corso che andranno perse se non clicchi su "Salva".
+> 💡 **Nota Visiva**: Se modifichi un dato, apparirà un **bordo rosso lampeggiante** attorno ai moduli e il tasto di salvataggio diventerà rosso acceso. Una volta cliccato su "Salva", il bordo sparirà e il tasto tornerà grigio (disabilitato), confermando che i dati sono al sicuro.
 
-**Importante**: La sezione per aggiungere i farmaci (punto 3 della schermata) apparirà solo dopo che avrai salvato il profilo per la prima volta.
+**Importante**: L'app esegue un controllo di sicurezza al momento del salvataggio. Se hai scelto "Email" ma non hai inserito l'indirizzo email del medico, o se hai scelto "WhatsApp" ma l'applicazione non è installata sul telefono, l'app ti avviserà con un messaggio e bloccherà il salvataggio finché il campo non verrà compilato correttamente.
 
 ---
 
 ## 🛠 4. Funzionalità Principali
 
-### 👤 Gestione Profilo
-Nella sezione **Impostazioni**, inserisci i tuoi dati (Nome, Cognome, Codice Fiscale) e i recapiti del tuo Medico di base. Questi dati verranno usati per generare automaticamente le richieste di farmaci.
-*   **Nota**: Se provi a uscire senza salvare, apparirà un **banner rosso** in alto per avvisarti delle modifiche non salvate.
-
 ### 💊 Gestione Farmaci
-Puoi aggiungere i tuoi farmaci abituali cliccando sul tasto **"+"**. Per ogni farmaco puoi specificare:
+Puoi aggiungere i tuoi farmaci abituali cliccando sul tasto verde **"NUOVO FARMACO/NOTIFICA"**. Per ogni farmaco puoi specificare:
 *   Nome e dosaggio.
-*   Note personalizzate.
-*   Se il farmaco è "attivo" o meno.
+*   Note personalizzate (es. "prendere a stomaco pieno").
+*   Orario e frequenza della notifica promemoria.
 
 ### 📩 Invio Richieste
-Seleziona i farmaci che desideri ordinare e clicca sull'icona di invio. L'app preparerà un messaggio o una mail con tutti i tuoi dati e l'elenco dei farmaci da inviare direttamente al tuo medico.
+Seleziona i farmaci che desideri ordinare dalla lista principale e clicca sul tasto verde **"INVIA RICHIESTA AL MEDICO"** in fondo alla pagina. L'app preparerà automaticamente il messaggio completo di Codice Fiscale e note.
 
 ### 💬 Messaggio Veloce al Medico
-Nella parte bassa della schermata principale (sopra il tasto di invio) trovi il tasto **"MESSAGGIO VELOCE AL MEDICO"**. Questa funzione ti permette di inviare una comunicazione testuale libera al tuo medico (ad esempio per chiedere un appuntamento o segnalare un sintomo) utilizzando lo stesso metodo di invio (WhatsApp, SMS o Email) configurato nel tuo profilo. L'app aggiungerà automaticamente i tuoi dati identificativi al messaggio.
+Oltre alla scelta e all'invio dei farmaci, l'applicazione offre una funzionalità aggiuntiva: il pulsante **"Messaggio veloce al medico"**, sempre visibile in fondo alla scheda "Richiesta". 
+Questa funzione è pensata per tutte quelle comunicazioni rapide che non riguardano l'ordine dei medicinali (es. comunicare la febbre, chiedere un appuntamento o un'informazione generica). 
+*   Cliccando sul tasto, si aprirà una finestra dove inserire il testo libero.
+*   L'app preparerà il messaggio includendo automaticamente in testa il tuo **Nome, Cognome e Codice Fiscale**, permettendo al medico di identificarti immediatamente senza che tu debba scrivere i tuoi dati ogni volta.
+*   Il messaggio verrà inviato tramite il canale scelto (WhatsApp, SMS o Email) e resterà tracciato nella tua cronologia.
 
 ### 📜 Cronologia (History)
 Tutte le richieste inviate vengono salvate nella sezione **Cronologia**.
