@@ -3,6 +3,7 @@ package com.example.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -19,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
@@ -39,7 +41,7 @@ import com.example.ui.theme.*
 import com.example.ui.viewmodel.MainViewModel
 
 @Composable
-fun MainScreen(viewModel: MainViewModel) {
+fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
     val context = LocalContext.current
     val settings by viewModel.settings.collectAsState()
     val medications by viewModel.medications.collectAsState()
@@ -61,13 +63,15 @@ fun MainScreen(viewModel: MainViewModel) {
     var showQuickMessageDialog by remember { mutableStateOf(false) }
     var quickMessageText by remember { mutableStateOf("") }
 
-    if (showQuickMessageDialog) {
-        // ... (existing code for quick message)
+    if (!disclaimerAccepted) {
+        DisclaimerDialog(onAccept = { 
+            viewModel.setDisclaimerAccepted(true)
+            onDisclaimerAccepted()
+        })
+        return // Blocca il rendering del resto dell'interfaccia
     }
 
-    if (!disclaimerAccepted) {
-        DisclaimerDialog(onAccept = { viewModel.setDisclaimerAccepted(true) })
-    } else if (!onboardingShown) {
+    if (!onboardingShown) {
         OnboardingDialog(onDismiss = { viewModel.setOnboardingShown(true) })
     }
 
@@ -102,7 +106,7 @@ fun MainScreen(viewModel: MainViewModel) {
                             "Hai già sostenuto il progetto il numero massimo di volte. Ti ringraziamo immensamente per il tuo supporto!"
                             else "Sostieni lo sviluppo di RichFarmaci con un contributo di 5€ per un buon caffè.\n\nVerrai reindirizzato su una pagina sicura gestita da PayPal dove potrai scegliere:\n• Se hai un account PayPal, usalo per procedere velocemente.\n• Se NON hai un account, potrai procedere comodamente con la tua carta di credito o prepagata cliccando su 'Paga con una carta'.",
                         fontSize = 16.sp,
-                        color = Slate900
+                        color = Slate600
                     )
                 }
             },
@@ -116,7 +120,7 @@ fun MainScreen(viewModel: MainViewModel) {
                             context.startActivity(intent)
                         },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("SOSTIENI CON 5€", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
@@ -129,6 +133,56 @@ fun MainScreen(viewModel: MainViewModel) {
                     modifier = Modifier.padding(top = 8.dp)
                 ) {
                     Text(if (isBlocked) "CHIUDI" else "ANNULLA", color = Slate600)
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = White
+        )
+    }
+
+    if (showQuickMessageDialog) {
+        AlertDialog(
+            onDismissRequest = { showQuickMessageDialog = false },
+            title = { Text("Messaggio Veloce", fontWeight = FontWeight.Bold, color = Slate900) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Invia una comunicazione rapida al medico (es. febbre, appuntamento). I tuoi dati verranno aggiunti automaticamente.", fontSize = 14.sp, color = Slate600)
+                    OutlinedTextField(
+                        value = quickMessageText,
+                        onValueChange = { quickMessageText = it },
+                        placeholder = { Text("Scrivi qui il tuo messaggio...") },
+                        modifier = Modifier.fillMaxWidth().height(120.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = GreenPrimary,
+                            unfocusedBorderColor = GrayBorder
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            },
+                    confirmButton = {
+                Button(
+                    onClick = {
+                        if (quickMessageText.isNotBlank()) {
+                            val intent = viewModel.generateQuickMessageIntent(quickMessageText)
+                            if (intent != null) {
+                                context.startActivity(intent)
+                                viewModel.recordSentRequest("MESSAGGIO VELOCE: $quickMessageText")
+                                quickMessageText = ""
+                                showQuickMessageDialog = false
+                            }
+                        }
+                    },
+                    enabled = quickMessageText.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("INVIA", color = White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showQuickMessageDialog = false }) {
+                    Text("ANNULLA", color = Slate600)
                 }
             },
             shape = RoundedCornerShape(20.dp),
@@ -329,7 +383,7 @@ fun MainScreen(viewModel: MainViewModel) {
                                     contentColor = GreenPrimary
                                 )
                             ) {
-                                Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, modifier = Modifier.size(20.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("MESSAGGIO VELOCE AL MEDICO", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             }

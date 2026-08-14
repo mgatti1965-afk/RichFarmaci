@@ -27,7 +27,10 @@ class GreetingScreenshotTest {
     val viewModel = MainViewModel(application)
     composeTestRule.setContent {
       RichFarmaciTheme {
-        MainScreen(viewModel = viewModel)
+        MainScreen(
+          viewModel = viewModel,
+          onDisclaimerAccepted = {}
+        )
       }
     }
 

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.annotation.VisibleForTesting
 import com.example.data.model.Medication
 import com.example.data.model.SentRequest
 import com.example.data.model.Profile
@@ -20,6 +21,11 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+
+        @VisibleForTesting
+        fun setTestInstance(database: AppDatabase) {
+            INSTANCE = database
+        }
 
         @JvmField
         val MIGRATION_3_4 = object : Migration(3, 4) {

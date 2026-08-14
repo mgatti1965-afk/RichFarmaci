@@ -354,15 +354,16 @@ fun SettingsPanelContent(
                                 val selected = valType == index
                                 Surface(
                                     modifier = Modifier.weight(1f).height(48.dp).clickable { valType = index },
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(12.dp),
                                     color = if (selected) White else GreenPrimary,
-                                    border = BorderStroke(1.5.dp, if (selected) GreenPrimary else Color.Transparent)
+                                    border = BorderStroke(2.dp, if (selected) GreenPrimary else GreenPrimary.copy(alpha = 0.1f))
                                 ) { 
                                     Box(contentAlignment = Alignment.Center) { 
                                         Text(
                                             label, 
                                             color = if (selected) GreenPrimary else White, 
-                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                            fontSize = 14.sp
                                         ) 
                                     } 
                                 }

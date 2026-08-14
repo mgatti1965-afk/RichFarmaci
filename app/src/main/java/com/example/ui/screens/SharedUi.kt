@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,12 +13,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +39,12 @@ import com.example.ui.theme.*
 @Composable
 fun DisclaimerDialog(onAccept: () -> Unit) {
     var showFullManual by remember { mutableStateOf(false) }
+
+    // Forza la chiusura dell'app se si preme il tasto indietro senza accettare
+    val activity = (androidx.compose.ui.platform.LocalContext.current as? android.app.Activity)
+    BackHandler {
+        activity?.finish()
+    }
 
     if (showFullManual) {
         ManualContentDialog(onDismiss = { showFullManual = false })
@@ -346,37 +357,62 @@ fun ManualContentDialog(onDismiss: () -> Unit) {
         title = { 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 PharmacyCross(modifier = Modifier.size(24.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Manuale Utente RichFarmaci", fontWeight = FontWeight.Bold, color = Slate900)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text("Guida all'Uso RichFarmaci", fontWeight = FontWeight.ExtraBold, color = Slate900, fontSize = 22.sp)
             }
         },
         text = {
             Column(
                 modifier = Modifier
-                    .heightIn(max = 450.dp)
+                    .heightIn(max = 500.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("1. CONFIGURAZIONE INIZIALE", fontWeight = FontWeight.Bold, color = GreenPrimary)
-                Text("Al primo avvio, inserisci il tuo Nome e Codice Fiscale. Puoi configurare i dati del medico importandoli dalla rubrica o scrivendoli manualmente. Scegli poi il canale preferito tra WhatsApp, SMS o Email.", fontSize = 14.sp)
+                ManualSection(
+                    title = "1. CONFIGURAZIONE",
+                    content = "Al primo avvio, inserisci Nome e Codice Fiscale del paziente. Configura i dati del medico importandoli dalla rubrica (tasto 'SCEGLI') o scrivendoli manualmente. Seleziona il canale preferito (WhatsApp, SMS o Email) e premi SALVA.",
+                    icon = { Icon(Icons.Default.Settings, null, tint = GreenPrimary) }
+                )
                 
-                Text("2. GESTIONE FARMACI", fontWeight = FontWeight.Bold, color = GreenPrimary)
-                Text("Aggiungi i farmaci che usi abitualmente indicando il nome e il numero di scatole standard. Puoi attivare promemoria personalizzati per ricordarti di ordinarli in tempo.", fontSize = 14.sp)
+                ManualSection(
+                    title = "2. GESTIONE FARMACI",
+                    content = "Nella sezione dedicata, aggiungi i farmaci abituali indicando il nome e le scatole standard. Attiva i promemoria per ricevere notifiche personalizzate e non dimenticare mai di ordinare le ricette.",
+                    icon = { Icon(Icons.Default.Add, null, tint = GreenPrimary) }
+                )
 
-                Text("3. INVIO RICHIESTE", fontWeight = FontWeight.Bold, color = GreenPrimary)
-                Text("Nella schermata principale, seleziona i farmaci che ti servono. Il tasto 'INVIA AL MEDICO' preparerà il messaggio. Ricorda: dovrai poi premere il tasto INVIO all'interno di WhatsApp o dell'app scelta per confermare l'invio reale.", fontSize = 14.sp)
+                ManualSection(
+                    title = "3. INVIO RICHIESTE",
+                    content = "Dalla schermata principale, seleziona i farmaci necessari e regola le quantità. Il tasto 'INVIA AL MEDICO' aprirà l'app scelta con il messaggio pre-compilato. Ricorda di premere INVIO nell'app di destinazione per completare l'operazione.",
+                    icon = { Icon(Icons.AutoMirrored.Filled.Send, null, tint = GreenPrimary) }
+                )
 
-                Text("4. MESSAGGIO VELOCE", fontWeight = FontWeight.Bold, color = GreenPrimary)
-                Text("Usa questa funzione per comunicazioni non legate ai farmaci (es. segnalare febbre). L'app aggiungerà automaticamente i tuoi dati per farti riconoscere dal medico.", fontSize = 14.sp)
+                ManualSection(
+                    title = "4. MESSAGGIO VELOCE",
+                    content = "Usa questa funzione per segnalare sintomi, febbre o richiedere appuntamenti. L'app aggiungerà automaticamente i dati del paziente per permettere al medico di identificarti immediatamente.",
+                    icon = { Icon(Icons.AutoMirrored.Filled.Chat, null, tint = GreenPrimary) }
+                )
                 
-                Text("5. GESTIONE PROFILI", fontWeight = FontWeight.Bold, color = GreenPrimary)
-                Text("Se gestisci farmaci per più persone, usa la barra azzurra in alto per creare e passare da un profilo all'altro in modo rapido.", fontSize = 14.sp)
+                ManualSection(
+                    title = "5. MULTI-PROFILO",
+                    content = "Gestisci più pazienti (es. familiari) usando la barra blu superiore. Ogni profilo mantiene la propria lista farmaci, medico e cronologia delle richieste inviate.",
+                    icon = { Icon(Icons.Default.Group, null, tint = GreenPrimary) }
+                )
 
-                Text("6. NOTE LEGALI E DISCLAIMER", fontWeight = FontWeight.Bold, color = Color.Red.copy(alpha = 0.7f))
-                Text("RichFarmaci è un supporto logistico, non un dispositivo medico. Lo sviluppatore non risponde di mancate consegne, errori di rete o malfunzionamenti delle notifiche dovuti al risparmio energetico dello smartphone. Verifica sempre l'esito dei tuoi invii.", fontSize = 14.sp)
+                ManualSection(
+                    title = "6. AVVERTENZE LEGALI",
+                    content = "L'app è uno strumento di supporto logistico e non sostituisce il medico. Lo sviluppatore declina ogni responsabilità per mancati invii dovuti a problemi di rete, configurazioni errate o limiti del sistema operativo (es. risparmio energetico sulle notifiche). Verifica sempre l'esito dei tuoi invii.",
+                    icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
+                    isWarning = true
+                )
                 
-                Text("7. FUNZIONI SPECIALI", fontWeight = FontWeight.Bold, color = Slate900)
-                Text("Per utenti esperti: inserendo un Codice Fiscale specifico fornito dall'assistenza, l'app può pre-caricare una lista di farmaci suggeriti.", fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Versione: 2.1.0\nSupporto: marco.gatti65@alice.it",
+                    fontSize = 11.sp,
+                    color = Slate600,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {
@@ -386,12 +422,25 @@ fun ManualContentDialog(onDismiss: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("HO LETTO TUTTO", color = White, fontWeight = FontWeight.Bold)
+                Text("CHIUDI GUIDA", color = White, fontWeight = FontWeight.Bold)
             }
         },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         containerColor = White
     )
+}
+
+@Composable
+fun ManualSection(title: String, content: String, icon: @Composable () -> Unit, isWarning: Boolean = false) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            icon()
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(title, fontWeight = FontWeight.Bold, color = if (isWarning) Color.Red.copy(alpha = 0.8f) else GreenPrimary, fontSize = 15.sp)
+        }
+        Text(content, fontSize = 14.sp, color = Slate600, lineHeight = 20.sp)
+        HorizontalDivider(color = GrayBorder.copy(alpha = 0.3f), modifier = Modifier.padding(top = 8.dp))
+    }
 }
 
 @Composable

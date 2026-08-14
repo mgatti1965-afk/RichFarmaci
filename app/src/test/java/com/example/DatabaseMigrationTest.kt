@@ -8,9 +8,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
+@Config(sdk = [34])
 class DatabaseMigrationTest {
 
     private val TEST_DB = "migration-test"
