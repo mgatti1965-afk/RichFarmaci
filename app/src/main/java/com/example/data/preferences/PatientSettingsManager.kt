@@ -30,7 +30,7 @@ class PatientSettingsManager(context: Context) {
     }
 
     fun saveSettings(settings: PatientSettings) {
-        prefs.edit().apply {
+        prefs.edit().run {
             putString("paziente_nome", settings.pazienteNome.trim())
             // Always convert patient C.F. to total uppercase as per spec
             putString("paziente_cf", settings.pazienteCf.trim().uppercase())

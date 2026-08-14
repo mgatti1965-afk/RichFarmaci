@@ -22,8 +22,9 @@ class PatientSettingsManagerTest {
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
         manager = PatientSettingsManager(context)
-        // Clear preferences before each test
-        context.getSharedPreferences("richfarmaci_prefs", Context.MODE_PRIVATE).edit().clear().commit()
+        // Usiamo apply() per conformità alle best practice di Android, 
+        // Robolectric gestisce correttamente la persistenza asincrona nei test.
+        context.getSharedPreferences("richfarmaci_prefs", Context.MODE_PRIVATE).edit().clear().apply()
     }
 
     @Test

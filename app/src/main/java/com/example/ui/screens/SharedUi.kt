@@ -407,7 +407,7 @@ fun ManualContentDialog(onDismiss: () -> Unit) {
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    "Versione: 2.1.0\nSupporto: marco.gatti65@alice.it",
+                    "Versione: 2.1.0\nSupporto: mgatt1965@gmail.com",
                     fontSize = 11.sp,
                     color = Slate600,
                     textAlign = TextAlign.Center,
