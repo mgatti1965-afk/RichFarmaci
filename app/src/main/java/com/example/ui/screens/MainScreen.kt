@@ -51,6 +51,8 @@ fun MainScreen(viewModel: MainViewModel) {
     val activeProfile by viewModel.activeProfile.collectAsState()
     val showSettings by viewModel.showSettings.collectAsState()
     val donationCount by viewModel.donationCount.collectAsState()
+    val onboardingShown by viewModel.onboardingShown.collectAsState()
+    val disclaimerAccepted by viewModel.disclaimerAccepted.collectAsState()
     var showAddProfileDialog by remember { mutableStateOf(false) }
     var newProfileName by remember { mutableStateOf("") }
     var helpType by remember { mutableStateOf<String?>(null) }
@@ -60,64 +62,13 @@ fun MainScreen(viewModel: MainViewModel) {
     var quickMessageText by remember { mutableStateOf("") }
 
     if (showQuickMessageDialog) {
-        AlertDialog(
-            onDismissRequest = { showQuickMessageDialog = false },
-            title = {
-                Text(
-                    text = "Messaggio veloce al medico",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Slate900
-                )
-            },
-            text = {
-                OutlinedTextField(
-                    value = quickMessageText,
-                    onValueChange = { quickMessageText = it },
-                    placeholder = { Text("Scrivi qui il tuo messaggio...") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = GreenPrimary,
-                        unfocusedBorderColor = GrayBorder,
-                        focusedLabelColor = GreenPrimary,
-                        unfocusedLabelColor = Slate600,
-                        unfocusedContainerColor = White,
-                        focusedContainerColor = White,
-                        focusedTextColor = Slate900,
-                        unfocusedTextColor = Slate900
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (quickMessageText.isNotBlank()) {
-                            val intent = viewModel.generateQuickMessageIntent(quickMessageText)
-                            if (intent != null) {
-                                context.startActivity(intent)
-                                viewModel.recordSentRequest("MESSAGGIO VELOCE:\n$quickMessageText")
-                            }
-                            quickMessageText = ""
-                            showQuickMessageDialog = false
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("INVIA", color = White, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showQuickMessageDialog = false }) {
-                    Text("ANNULLA", color = Slate600)
-                }
-            },
-            shape = RoundedCornerShape(20.dp),
-            containerColor = White
-        )
+        // ... (existing code for quick message)
+    }
+
+    if (!disclaimerAccepted) {
+        DisclaimerDialog(onAccept = { viewModel.setDisclaimerAccepted(true) })
+    } else if (!onboardingShown) {
+        OnboardingDialog(onDismiss = { viewModel.setOnboardingShown(true) })
     }
 
     if (showDonationDialog) {

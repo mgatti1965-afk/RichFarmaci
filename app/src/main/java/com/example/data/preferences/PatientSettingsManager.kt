@@ -87,4 +87,12 @@ class PatientSettingsManager(context: Context) {
     fun setOnboardingShown(shown: Boolean) {
         prefs.edit().putBoolean("onboarding_shown", shown).apply()
     }
+
+    fun isDisclaimerAccepted(): Boolean {
+        return prefs.getBoolean("disclaimer_accepted", false)
+    }
+
+    fun setDisclaimerAccepted(accepted: Boolean) {
+        prefs.edit().putBoolean("disclaimer_accepted", accepted).apply()
+    }
 }

@@ -88,4 +88,17 @@ Se trovi utile l'app, puoi sostenere lo sviluppo cliccando sull'icona della **ta
 *   **Dati mancanti**: Assicurati di aver cliccato su "Salva" dopo ogni modifica nel profilo o nei farmaci.
 
 ---
+
+## ⚖️ 7. Limitazione di Responsabilità (Disclaimer)
+
+L’applicazione **RichFarmaci** ha scopo puramente gestionale e di supporto logistico. Non costituisce un dispositivo medico e non sostituisce in alcun modo il parere, la diagnosi o il consiglio del medico curante. 
+
+L’utente riconosce e accetta che lo sviluppatore non si assume alcuna responsabilità per:
+*   **Mancato recapito**: Errori, ritardi o mancite consegne dei messaggi (WhatsApp, SMS, Email) verso il medico curante dovuti a problemi di rete, configurazione o limitazioni delle app terze.
+*   **Notifiche e Promemoria**: Malfunzionamenti o ritardi delle notifiche promemoria dovuti a impostazioni del sistema operativo (es. risparmio energetico, ottimizzazione batteria).
+*   **Accuratezza dei dati**: Errori o imprecisioni nei dati (nomi farmaci, dosaggi, codici fiscali) inseriti manualmente dall'utente.
+
+L'utente è tenuto a verificare sempre l'effettivo invio delle richieste e l'accuratezza delle informazioni trasmesse. L'uso dell'applicazione avviene sotto la piena e consapevole responsabilità dell'utente.
+
+---
 *Prodotto con cura per semplificare la tua salute.*

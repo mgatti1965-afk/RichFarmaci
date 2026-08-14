@@ -112,9 +112,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _onboardingShown = MutableStateFlow(settingsManager.isOnboardingShown())
     val onboardingShown: StateFlow<Boolean> = _onboardingShown.asStateFlow()
 
+    private val _disclaimerAccepted = MutableStateFlow(settingsManager.isDisclaimerAccepted())
+    val disclaimerAccepted: StateFlow<Boolean> = _disclaimerAccepted.asStateFlow()
+
     fun setOnboardingShown(shown: Boolean) {
         settingsManager.setOnboardingShown(shown)
         _onboardingShown.value = shown
+    }
+
+    fun setDisclaimerAccepted(accepted: Boolean) {
+        settingsManager.setDisclaimerAccepted(accepted)
+        _disclaimerAccepted.value = accepted
     }
 
     fun incrementDonationCount() {

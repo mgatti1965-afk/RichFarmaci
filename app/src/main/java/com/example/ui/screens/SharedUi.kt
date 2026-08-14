@@ -7,12 +7,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
@@ -27,6 +30,69 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.Profile
 import com.example.ui.theme.*
+
+@Composable
+fun DisclaimerDialog(onAccept: () -> Unit) {
+    var showFullManual by remember { mutableStateOf(false) }
+
+    if (showFullManual) {
+        ManualContentDialog(onDismiss = { showFullManual = false })
+    }
+
+    AlertDialog(
+        onDismissRequest = { },
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Info, contentDescription = null, tint = Color.Red.copy(alpha = 0.7f))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "Limitazione di Responsabilità", fontWeight = FontWeight.Bold, color = Slate900)
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "L’applicazione RichFarmaci ha scopo puramente gestionale e di supporto logistico. Non costituisce un dispositivo medico e non sostituisce in alcun modo il parere, la diagnosi o il consiglio del medico curante.",
+                    fontSize = 14.sp,
+                    color = Slate600
+                )
+                Text(
+                    "Lo sviluppatore non si assume alcuna responsabilità per:",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = Slate900
+                )
+                HelpItem("Errori, ritardi o mancate consegne dei messaggi (WhatsApp, SMS, Email).")
+                HelpItem("Malfunzionamento delle notifiche (dovute a risparmio energetico o sistema operativo).")
+                HelpItem("Errori nei dati (nomi farmaci, dosaggi, CF) inseriti dall'utente.")
+                Text(
+                    "L'utente è tenuto a verificare sempre l'effettivo invio delle richieste. L'uso dell'app avviene sotto la piena e consapevole responsabilità dell'utente.",
+                    fontSize = 14.sp,
+                    color = Slate600,
+                    fontWeight = FontWeight.Medium
+                )
+
+                TextButton(
+                    onClick = { showFullManual = true },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    Text("CONSULTA IL MANUALE COMPLETO", color = GreenPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onAccept,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("ACCETTO E PROSEGUO", color = White, fontWeight = FontWeight.Bold)
+            }
+        },
+        shape = RoundedCornerShape(20.dp),
+        containerColor = White
+    )
+}
 
 @Composable
 fun HelpDialog(type: String, onDismiss: () -> Unit) {
@@ -62,11 +128,27 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                         HelpItem("Scegli il metodo di invio (il tasto selezionato ha il bordo verde, gli altri sono verdi).")
                         HelpItem("Premi 'SALVA CONFIGURAZIONE' (il tasto è rosso se ci sono modifiche e torna grigio quando salvato).")
                         HelpItem("Sotto la sezione salvataggio, aggiungi i farmaci abituali e attiva le notifiche.")
+                        HelpItem("Nota: L'uso dell'app implica l'accettazione della limitazione di responsabilità (consultabile in questa guida o nel manuale completo).")
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Ho capito", color = GreenPrimary, fontWeight = FontWeight.Bold) } },
+        confirmButton = {
+            var showFullManual by remember { mutableStateOf(false) }
+            if (showFullManual) {
+                ManualContentDialog(onDismiss = { showFullManual = false })
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                if (type == "configurazione") {
+                    TextButton(onClick = { showFullManual = true }) {
+                        Text("MANUALE", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                    }
+                }
+                TextButton(onClick = onDismiss) {
+                    Text("Ho capito", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                }
+            }
+        },
         shape = RoundedCornerShape(16.dp),
         containerColor = GrayBackground
     )
@@ -74,6 +156,12 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
 
 @Composable
 fun OnboardingDialog(onDismiss: () -> Unit) {
+    var showFullManual by remember { mutableStateOf(false) }
+
+    if (showFullManual) {
+        ManualContentDialog(onDismiss = { showFullManual = false })
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -92,22 +180,35 @@ fun OnboardingDialog(onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    "Configura il tuo primo profilo in pochi passi:",
+                    "Configura il tuo profilo in pochi passi:",
                     fontWeight = FontWeight.SemiBold,
                     color = Slate900
                 )
-                HelpItem("Inserisci il tuo Nome e Codice Fiscale (necessario per le ricette).")
-                HelpItem("Inserisci i dati del tuo Medico (Telefono o Email).")
-                HelpItem("Personalizza, se vuoi, i messaggi di richiesta.")
-                HelpItem("Dopo il salvataggio, potrai aggiungere i tuoi Farmaci abituali.")
+                HelpItem("Inserisci Nome, Codice Fiscale e dati del Medico.")
+                HelpItem("Scegli il metodo di invio e salva la configurazione.")
+                HelpItem("Aggiungi i tuoi Farmaci e attiva i promemoria.")
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = GrayBorder.copy(alpha = 0.5f))
+                
                 Text(
-                    "Tutti i dati rimangono salvati esclusivamente sul tuo telefono.",
-                    fontSize = 13.sp,
-                    color = Slate600,
-                    lineHeight = 18.sp
+                    "LIMITAZIONE DI RESPONSABILITÀ:",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    color = Color.Red.copy(alpha = 0.7f)
                 )
+                Text(
+                    "L'app ha scopo logistico e non sostituisce il medico. Lo sviluppatore non risponde di mancati invii o errori. L'uso è a tuo rischio.",
+                    fontSize = 12.sp,
+                    color = Slate600,
+                    lineHeight = 16.sp
+                )
+
+                TextButton(
+                    onClick = { showFullManual = true },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    Text("CONSULTA IL MANUALE COMPLETO", color = GreenPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
             }
         },
         confirmButton = {
@@ -117,7 +218,7 @@ fun OnboardingDialog(onDismiss: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("INIZIAMO", color = White, fontWeight = FontWeight.Bold)
+                Text("ACCETTO E INIZIAMO", color = White, fontWeight = FontWeight.Bold)
             }
         },
         shape = RoundedCornerShape(20.dp),
@@ -236,6 +337,61 @@ fun HelpItem(text: String) {
         Text("• ", fontWeight = FontWeight.Bold, color = GreenPrimary, fontSize = 18.sp)
         Text(text = text, fontSize = 15.sp, color = Slate600)
     }
+}
+
+@Composable
+fun ManualContentDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { 
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                PharmacyCross(modifier = Modifier.size(24.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Manuale Utente RichFarmaci", fontWeight = FontWeight.Bold, color = Slate900)
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 450.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("1. CONFIGURAZIONE INIZIALE", fontWeight = FontWeight.Bold, color = GreenPrimary)
+                Text("Al primo avvio, inserisci il tuo Nome e Codice Fiscale. Puoi configurare i dati del medico importandoli dalla rubrica o scrivendoli manualmente. Scegli poi il canale preferito tra WhatsApp, SMS o Email.", fontSize = 14.sp)
+                
+                Text("2. GESTIONE FARMACI", fontWeight = FontWeight.Bold, color = GreenPrimary)
+                Text("Aggiungi i farmaci che usi abitualmente indicando il nome e il numero di scatole standard. Puoi attivare promemoria personalizzati per ricordarti di ordinarli in tempo.", fontSize = 14.sp)
+
+                Text("3. INVIO RICHIESTE", fontWeight = FontWeight.Bold, color = GreenPrimary)
+                Text("Nella schermata principale, seleziona i farmaci che ti servono. Il tasto 'INVIA AL MEDICO' preparerà il messaggio. Ricorda: dovrai poi premere il tasto INVIO all'interno di WhatsApp o dell'app scelta per confermare l'invio reale.", fontSize = 14.sp)
+
+                Text("4. MESSAGGIO VELOCE", fontWeight = FontWeight.Bold, color = GreenPrimary)
+                Text("Usa questa funzione per comunicazioni non legate ai farmaci (es. segnalare febbre). L'app aggiungerà automaticamente i tuoi dati per farti riconoscere dal medico.", fontSize = 14.sp)
+                
+                Text("5. GESTIONE PROFILI", fontWeight = FontWeight.Bold, color = GreenPrimary)
+                Text("Se gestisci farmaci per più persone, usa la barra azzurra in alto per creare e passare da un profilo all'altro in modo rapido.", fontSize = 14.sp)
+
+                Text("6. NOTE LEGALI E DISCLAIMER", fontWeight = FontWeight.Bold, color = Color.Red.copy(alpha = 0.7f))
+                Text("RichFarmaci è un supporto logistico, non un dispositivo medico. Lo sviluppatore non risponde di mancate consegne, errori di rete o malfunzionamenti delle notifiche dovuti al risparmio energetico dello smartphone. Verifica sempre l'esito dei tuoi invii.", fontSize = 14.sp)
+                
+                Text("7. FUNZIONI SPECIALI", fontWeight = FontWeight.Bold, color = Slate900)
+                Text("Per utenti esperti: inserendo un Codice Fiscale specifico fornito dall'assistenza, l'app può pre-caricare una lista di farmaci suggeriti.", fontSize = 14.sp)
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("HO LETTO TUTTO", color = White, fontWeight = FontWeight.Bold)
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = White
+    )
 }
 
 @Composable
