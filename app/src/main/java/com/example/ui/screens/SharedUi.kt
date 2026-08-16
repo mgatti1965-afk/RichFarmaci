@@ -133,13 +133,12 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                         HelpItem("Puoi eliminare le vecchie richieste usando l'icona del cestino.")
                     }
                     "configurazione" -> {
-                        HelpItem("Usa la barra azzurra superiore per gestire i profili dei pazienti (aggiungi o elimina).")
-                        HelpItem("Inserisci i dati del Paziente (Nome e Codice Fiscale).")
-                        HelpItem("Inserisci i dati del Medico. Puoi importarli dalla rubrica con il tasto 'SCEGLI'.")
-                        HelpItem("Scegli il metodo di invio (il tasto selezionato ha il bordo verde, gli altri sono verdi).")
-                        HelpItem("Premi 'SALVA CONFIGURAZIONE' (il tasto è rosso se ci sono modifiche e torna grigio quando salvato).")
-                        HelpItem("Sotto la sezione salvataggio, aggiungi i farmaci abituali e attiva le notifiche.")
-                        HelpItem("Nota: L'uso dell'app implica l'accettazione della limitazione di responsabilità (consultabile in questa guida o nel manuale completo).")
+                        HelpItem("Usa la barra azzurra superiore per gestire i profili (aggiungi o elimina).")
+                        HelpItem("1. ANAGRAFICA: Inserisci i dati di Paziente e Medico (usa 'SCEGLI' per la rubrica).")
+                        HelpItem("2. OPZIONI: Scegli il canale (WhatsApp/SMS/Email) e personalizza i saluti.")
+                        HelpItem("3. FARMACI: Aggiungi la tua terapia e attiva i singoli promemoria.")
+                        HelpItem("SALVATAGGIO: Il tasto diventa ROSSO se ci sono modifiche. Cliccalo per confermare.")
+                        HelpItem("Nota: I promemoria funzionano solo se l'interruttore 'Attiva Notifiche' è acceso.")
                     }
                 }
             }
@@ -149,11 +148,13 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
             if (showFullManual) {
                 ManualContentDialog(onDismiss = { showFullManual = false })
             }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                if (type == "configurazione") {
-                    TextButton(onClick = { showFullManual = true }) {
-                        Text("MANUALE", color = GreenPrimary, fontWeight = FontWeight.Bold)
-                    }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = { showFullManual = true }) {
+                    Text("MANUALE", color = GreenPrimary, fontWeight = FontWeight.Bold)
                 }
                 TextButton(onClick = onDismiss) {
                     Text("Ho capito", color = GreenPrimary, fontWeight = FontWeight.Bold)
@@ -369,45 +370,45 @@ fun ManualContentDialog(onDismiss: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 ManualSection(
-                    title = "1. CONFIGURAZIONE",
-                    content = "Al primo avvio, inserisci Nome e Codice Fiscale del paziente. Configura i dati del medico importandoli dalla rubrica (tasto 'SCEGLI') o scrivendoli manualmente. Seleziona il canale preferito (WhatsApp, SMS o Email) e premi SALVA.",
+                    title = "1. ANAGRAFICA PAZIENTE E MEDICO",
+                    content = "Inserisci Nome, Cognome e Codice Fiscale. Per il Medico puoi usare il tasto 'SCEGLI' dalla rubrica. CONSIGLIO: Nella fase di preparazione dei dati è consigliato inserire un indirizzo d'appoggio, per es. di un familiare, ed effettuare qualche test di invio delle richieste. Solo in un secondo momento procedere con la sostituzione dei dati reali.",
                     icon = { Icon(Icons.Default.Settings, null, tint = GreenPrimary) }
                 )
                 
                 ManualSection(
-                    title = "2. GESTIONE FARMACI",
-                    content = "Nella sezione dedicata, aggiungi i farmaci abituali indicando il nome e le scatole standard. Attiva i promemoria per ricevere notifiche personalizzate e non dimenticare mai di ordinare le ricette.",
+                    title = "2. OPZIONI E CANALE INVIO",
+                    content = "Scegli tra WhatsApp, SMS o Email (il canale attivo ha bordo verde). Personalizza la frase di testa e di coda. Il tasto SALVA diventa ROSSO se ci sono modifiche: cliccalo sempre per confermare.",
+                    icon = { Icon(Icons.AutoMirrored.Filled.Chat, null, tint = GreenPrimary) }
+                )
+
+                ManualSection(
+                    title = "3. REGISTRO FARMACI E PROMEMORIA",
+                    content = "Aggiungi i farmaci con le quantità standard. Se le notifiche globali sono attive, puoi impostare promemoria personalizzati per orario e frequenza (anche ogni tot ore) per ogni singolo farmaco.",
                     icon = { Icon(Icons.Default.Add, null, tint = GreenPrimary) }
                 )
 
                 ManualSection(
-                    title = "3. INVIO RICHIESTE",
-                    content = "Dalla schermata principale, seleziona i farmaci necessari e regola le quantità. Il tasto 'INVIA AL MEDICO' aprirà l'app scelta con il messaggio pre-compilato. Ricorda di premere INVIO nell'app di destinazione per completare l'operazione.",
+                    title = "4. INVIO RICHIESTE",
+                    content = "Dalla schermata principale, seleziona i farmaci e premi 'INVIA AL MEDICO'. Il messaggio verrà preparato nell'app scelta (es. WhatsApp), dove potrai controllarlo prima dell'invio finale.",
                     icon = { Icon(Icons.AutoMirrored.Filled.Send, null, tint = GreenPrimary) }
-                )
-
-                ManualSection(
-                    title = "4. MESSAGGIO VELOCE",
-                    content = "Usa questa funzione per segnalare sintomi, febbre o richiedere appuntamenti. L'app aggiungerà automaticamente i dati del paziente per permettere al medico di identificarti immediatamente.",
-                    icon = { Icon(Icons.AutoMirrored.Filled.Chat, null, tint = GreenPrimary) }
                 )
                 
                 ManualSection(
                     title = "5. MULTI-PROFILO",
-                    content = "Gestisci più pazienti (es. familiari) usando la barra blu superiore. Ogni profilo mantiene la propria lista farmaci, medico e cronologia delle richieste inviate.",
+                    content = "Gestisci più persone dalla barra azzurra in alto. Ogni profilo è una 'scheda' indipendente e mantiene i propri dati, farmaci e cronologia delle richieste.",
                     icon = { Icon(Icons.Default.Group, null, tint = GreenPrimary) }
                 )
 
                 ManualSection(
-                    title = "6. AVVERTENZE LEGALI",
-                    content = "L'app è uno strumento di supporto logistico e non sostituisce il medico. Lo sviluppatore declina ogni responsabilità per mancati invii dovuti a problemi di rete, configurazioni errate o limiti del sistema operativo (es. risparmio energetico sulle notifiche). Verifica sempre l'esito dei tuoi invii.",
+                    title = "6. AVVERTENZE E BATTERIA",
+                    content = "Per promemoria affidabili, imposta l'app su 'Senza restrizioni' nelle impostazioni batteria del telefono. L'app è un supporto logistico e non sostituisce il parere del medico curante.",
                     icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
                     isWarning = true
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    "Versione: 2.1.0\nSupporto: mgatt1965@gmail.com",
+                    "Versione: 2.1.0\nSupporto: mgatt1965@gmail.com\nDonazioni: marco.gatti65@alice.it",
                     fontSize = 11.sp,
                     color = Slate600,
                     textAlign = TextAlign.Center,

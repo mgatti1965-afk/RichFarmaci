@@ -1,0 +1,58 @@
+*🏥 RICHFARMACI - GUIDA RAPIDA* 🏥
+
+Benvenuto in *RichFarmaci*! Questa guida ti aiuterà a configurare l'app in pochi minuti.
+
+---
+
+*📥 1. INSTALLAZIONE (APK)*
+
+• *Da WhatsApp:* Clicca sul file ricevuto -> *Installa*. Se appare un avviso, vai in *Impostazioni* e attiva *"Consenti da questa fonte"*.
+• *Sicurezza:* Se appare "App bloccata", clicca su *Altre informazioni* e poi su *Installa comunque*.
+
+---
+
+*⚙️ 2. CONFIGURAZIONE INIZIALE*
+
+Premi l'ingranaggio (⚙️) in alto a destra:
+
+• *Multiprofilo:* Gestisci più persone separatamente. Ogni profilo è una *"scheda indipendente"*. Usa il tasto (+) per aggiungere un nuovo paziente.
+• *Anagrafica:* Inserisci i dati del Paziente e del Medico (puoi usare il tasto *SCEGLI* per prenderlo dalla rubrica).
+• *Canale Invio:* Scegli tra WhatsApp, SMS o Email. Il tasto *SALVA* in fondo diventa *ROSSO* se ci sono modifiche: cliccalo sempre per confermare!
+
+---
+
+*💊 3. GESTIONE FARMACI*
+
+Sempre in Configurazione, clicca su *NUOVO FARMACO/NOTIFICA*:
+
+• Inserisci il nome e la quantità standard.
+• Se vuoi i promemoria, attiva la notifica e imposta l'orario.
+• Puoi mettere in *"Pausa"* i farmaci che non usi al momento per non vederli nell'elenco ordini.
+
+---
+
+*✉️ 4. COME ORDINARE*
+
+Dalla schermata principale ("Richiesta"):
+
+1. Seleziona i farmaci che ti servono (diventano azzurri).
+2. Regola il numero di scatole con + e -.
+3. Premi *INVIA AL MEDICO*.
+4. *IMPORTANTE:* Il messaggio si aprirà nel canale scelto (es. WhatsApp). Controllalo e premi il tasto invio del telefono per spedirlo effettivamente.
+
+---
+
+*💬 MESSAGGIO VELOCE AL MEDICO*
+
+In fondo alla scheda trovi il tasto per inviare rapidamente note come "Ho la febbre" o "Vorrei un appuntamento". L'app aggiungerà i tuoi dati automaticamente in testa al testo.
+
+---
+
+*⚠️ NOTE IMPORTANTI*
+
+• *Batteria:* Se le notifiche non arrivano, vai nelle impostazioni del telefono -> App -> RichFarmaci -> Batteria e imposta su *"Senza restrizioni"*.
+• *Responsabilità:* L'app è un supporto logistico. Verifica sempre che il medico riceva i messaggi.
+
+---
+
+*📧 SUPPORTO:* mgatt1965@gmail.com
