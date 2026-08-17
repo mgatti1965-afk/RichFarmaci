@@ -136,9 +136,8 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                         HelpItem("Usa la barra azzurra superiore per gestire i profili (aggiungi o elimina).")
                         HelpItem("1. ANAGRAFICA: Inserisci i dati di Paziente e Medico (usa 'SCEGLI' per la rubrica).")
                         HelpItem("2. OPZIONI: Scegli il canale (WhatsApp/SMS/Email) e personalizza i saluti.")
-                        HelpItem("3. FARMACI: Aggiungi la tua terapia e attiva i singoli promemoria.")
+                        HelpItem("3. FARMACI: Aggiungi la tua terapia. Clicca sul tasto '?' dentro la scheda farmaco per i dettagli su notifiche e ripetizioni.")
                         HelpItem("SALVATAGGIO: Il tasto diventa ROSSO se ci sono modifiche. Cliccalo per confermare.")
-                        HelpItem("Nota: I promemoria funzionano solo se l'interruttore 'Attiva Notifiche' è acceso.")
                     }
                 }
             }
@@ -370,45 +369,51 @@ fun ManualContentDialog(onDismiss: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 ManualSection(
-                    title = "1. ANAGRAFICA PAZIENTE E MEDICO",
-                    content = "Inserisci Nome, Cognome e Codice Fiscale. Per il Medico puoi usare il tasto 'SCEGLI' dalla rubrica. CONSIGLIO: Nella fase di preparazione dei dati è consigliato inserire un indirizzo d'appoggio, per es. di un familiare, ed effettuare qualche test di invio delle richieste. Solo in un secondo momento procedere con la sostituzione dei dati reali.",
-                    icon = { Icon(Icons.Default.Settings, null, tint = GreenPrimary) }
-                )
-                
-                ManualSection(
-                    title = "2. OPZIONI E CANALE INVIO",
-                    content = "Scegli tra WhatsApp, SMS o Email (il canale attivo ha bordo verde). Personalizza la frase di testa e di coda. Il tasto SALVA diventa ROSSO se ci sono modifiche: cliccalo sempre per confermare.",
-                    icon = { Icon(Icons.AutoMirrored.Filled.Chat, null, tint = GreenPrimary) }
+                    title = "1. INSTALLAZIONE E SICUREZZA",
+                    content = "Da WhatsApp: Clicca sul file e su 'Installa'. Da Email: Scarica l'allegato e clicca sulla notifica. Se appare 'App bloccata', clicca su 'Altre informazioni' e 'Installa comunque'. Autorizza sempre le notifiche al primo avvio.",
+                    icon = { Icon(Icons.Default.Info, null, tint = GreenPrimary) }
                 )
 
                 ManualSection(
-                    title = "3. REGISTRO FARMACI E PROMEMORIA",
-                    content = "Aggiungi i farmaci con le quantità standard. Se le notifiche globali sono attive, puoi impostare promemoria personalizzati per orario e frequenza (anche ogni tot ore) per ogni singolo farmaco.",
-                    icon = { Icon(Icons.Default.Add, null, tint = GreenPrimary) }
-                )
-
-                ManualSection(
-                    title = "4. INVIO RICHIESTE",
-                    content = "Dalla schermata principale, seleziona i farmaci e premi 'INVIA AL MEDICO'. Il messaggio verrà preparato nell'app scelta (es. WhatsApp), dove potrai controllarlo prima dell'invio finale.",
-                    icon = { Icon(Icons.AutoMirrored.Filled.Send, null, tint = GreenPrimary) }
-                )
-                
-                ManualSection(
-                    title = "5. MULTI-PROFILO",
-                    content = "Gestisci più persone dalla barra azzurra in alto. Ogni profilo è una 'scheda' indipendente e mantiene i propri dati, farmaci e cronologia delle richieste.",
+                    title = "2. MULTI-PROFILO",
+                    content = "Gestisci più persone separatamente. Ogni profilo è un 'cassetto' isolato. Usa il tasto (+) per aggiungere un nuovo paziente. Cambia profilo cliccando sul nome in alto nella barra azzurra.",
                     icon = { Icon(Icons.Default.Group, null, tint = GreenPrimary) }
                 )
 
                 ManualSection(
-                    title = "6. AVVERTENZE E BATTERIA",
-                    content = "Per promemoria affidabili, imposta l'app su 'Senza restrizioni' nelle impostazioni batteria del telefono. L'app è un supporto logistico e non sostituisce il parere del medico curante.",
+                    title = "3. ANAGRAFICA E CONFIGURAZIONE",
+                    content = "Inserisci dati Paziente e Medico (tasto 'SCEGLI' per rubrica). CONSIGLIO: Fai dei test con un numero di appoggio prima di inserire i dati reali del medico. Il tasto SALVA diventa ROSSO se ci sono modifiche.",
+                    icon = { Icon(Icons.Default.Settings, null, tint = GreenPrimary) }
+                )
+                
+                ManualSection(
+                    title = "4. INVIO E CANALI",
+                    content = "Scegli tra WhatsApp, SMS o Email (bordo verde). Personalizza frase di testa e coda. L'invio NON è immediato: potrai controllare il messaggio nel canale scelto prima di spedirlo.",
+                    icon = { Icon(Icons.AutoMirrored.Filled.Chat, null, tint = GreenPrimary) }
+                )
+
+                ManualSection(
+                    title = "5. FARMACI E NOTIFICHE",
+                    content = "Aggiungi farmaci con quantità standard. Se le notifiche sono attive, imposta orari (anche multipli) e frequenza. Il tasto (?) nell'editor farmaco spiega come gestire orari e anteprime.",
+                    icon = { Icon(Icons.Default.Add, null, tint = GreenPrimary) }
+                )
+
+                ManualSection(
+                    title = "6. RICHIESTE E CRONOLOGIA",
+                    content = "Seleziona i farmaci e premi 'INVIA AL MEDICO'. La Cronologia salva tutti gli invii effettuati in ordine cronologico.",
+                    icon = { Icon(Icons.AutoMirrored.Filled.Send, null, tint = GreenPrimary) }
+                )
+                
+                ManualSection(
+                    title = "7. BATTERIA E RESPONSABILITÀ",
+                    content = "Imposta l'app su 'Senza restrizioni' nelle impostazioni batteria per notifiche affidabili. L'app è un supporto logistico, verifica sempre l'effettivo invio delle richieste.",
                     icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
                     isWarning = true
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    "Versione: 2.1.0\nSupporto: mgatt1965@gmail.com\nDonazioni: marco.gatti65@alice.it",
+                    "Versione: 2.1.0\nSupporto tecnico: mgatt1965@gmail.com",
                     fontSize = 11.sp,
                     color = Slate600,
                     textAlign = TextAlign.Center,

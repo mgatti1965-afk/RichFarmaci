@@ -587,7 +587,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         footerParts.add("Codice Fiscale: ${currentProfile.pazienteCf.uppercase()}")
 
         if (currentProfile.secondoIndirizzo.isNotBlank()) {
-            footerParts.add("Note di Recapito: ${currentProfile.secondoIndirizzo}")
+            footerParts.add("Ulteriori note: ${currentProfile.secondoIndirizzo}")
         }
 
         if (currentProfile.tipoInvio == 2 && currentProfile.medicoEmail.isNotBlank()) {

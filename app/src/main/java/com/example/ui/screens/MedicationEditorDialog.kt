@@ -8,13 +8,16 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,8 +30,149 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.text.font.FontStyle
+import java.text.SimpleDateFormat
+import java.util.*
 import com.example.data.model.Medication
 import com.example.ui.theme.*
+
+@Composable
+fun NotificationPreview(
+    orarioNotifica: String,
+    frequenzaValore: Int,
+    frequenzaTipo: String
+) {
+    val occurrences = remember(orarioNotifica, frequenzaValore, frequenzaTipo) {
+        val list = mutableListOf<Long>()
+        val orariList = orarioNotifica.split(",").filter { it.isNotBlank() }
+        if (orariList.isEmpty()) return@remember emptyList<Date>()
+
+        val now = System.currentTimeMillis()
+
+        orariList.forEach { orario ->
+            val calendar = Calendar.getInstance()
+            val parts = orario.split(":")
+            calendar.set(Calendar.HOUR_OF_DAY, parts.getOrNull(0)?.toIntOrNull() ?: 8)
+            calendar.set(Calendar.MINUTE, parts.getOrNull(1)?.toIntOrNull() ?: 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+
+            var nextTime = calendar.timeInMillis
+            
+            if (nextTime <= now) {
+                if (frequenzaValore > 0) {
+                    if (frequenzaTipo == "ORE") {
+                        while (nextTime <= now) {
+                            calendar.add(Calendar.HOUR_OF_DAY, frequenzaValore)
+                            nextTime = calendar.timeInMillis
+                        }
+                    } else {
+                        while (nextTime <= now) {
+                            calendar.add(Calendar.DAY_OF_YEAR, frequenzaValore)
+                            nextTime = calendar.timeInMillis
+                        }
+                    }
+                }
+                // Se frequenzaValore == 0 e l'orario è passato, rimarrà nel passato
+            }
+            
+            if (nextTime > now) {
+                list.add(nextTime)
+
+                // Aggiungiamo ripetizioni solo se frequenzaValore > 0
+                if (frequenzaValore > 0) {
+                    repeat(4) {
+                        if (frequenzaTipo == "ORE") {
+                            calendar.add(Calendar.HOUR_OF_DAY, frequenzaValore)
+                        } else {
+                            calendar.add(Calendar.DAY_OF_YEAR, frequenzaValore)
+                        }
+                        list.add(calendar.timeInMillis)
+                    }
+                }
+            }
+        }
+        
+        list.distinct().sorted().take(5).map { Date(it) }
+    }
+
+    if (occurrences.isEmpty()) return
+
+    val timeFormat = SimpleDateFormat("HH:mm", Locale.ITALY)
+    val dateFormat = SimpleDateFormat("dd MMM", Locale.ITALY)
+    val dayFormat = SimpleDateFormat("EEE", Locale.ITALY)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
+            .background(GrayDarker.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+            .padding(vertical = 12.dp)
+    ) {
+        Text(
+            text = "Prossime Notifiche:",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = Slate600,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            textAlign = TextAlign.Center
+        )
+        
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+        ) {
+            occurrences.forEach { date ->
+                Column(
+                    modifier = Modifier
+                        .width(80.dp)
+                        .background(White, RoundedCornerShape(8.dp))
+                        .border(1.dp, GrayBorder, RoundedCornerShape(8.dp))
+                        .padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = dayFormat.format(date).replace(".", "").uppercase(),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = GreenPrimary,
+                        maxLines = 1,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = dateFormat.format(date).replace(".", ""),
+                        fontSize = 12.sp,
+                        color = Slate900,
+                        maxLines = 1,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = timeFormat.format(date),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Slate900,
+                        maxLines = 1,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+        
+        if (frequenzaTipo == "ORE" && frequenzaValore > 0 && 24 % frequenzaValore != 0) {
+            Text(
+                text = "Nota: l'orario cambierà ogni giorno (deriva)",
+                fontSize = 11.sp,
+                color = Color.Red.copy(alpha = 0.7f),
+                fontStyle = FontStyle.Italic,
+                modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,9 +192,19 @@ fun MedicationEditorDialog(
     var frequenzaValore by remember { mutableIntStateOf(medication?.frequenzaValore ?: 1) }
     var frequenzaTipo by remember { mutableStateOf(medication?.frequenzaTipo ?: "GIORNI") }
 
+    val isMultipleTimes = remember(orarioNotifica) { orarioNotifica.split(",").filter { it.isNotBlank() }.size > 1 }
+
+    LaunchedEffect(isMultipleTimes) {
+        if (isMultipleTimes && frequenzaTipo == "ORE") {
+            frequenzaTipo = "GIORNI"
+        }
+    }
+
     var exitAttempted by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var timePickerTargetIndex by remember { mutableIntStateOf(-1) }
     var showWarningBanner by remember { mutableStateOf(false) }
+    var showHelpDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(showWarningBanner) {
         if (showWarningBanner) {
@@ -83,7 +237,12 @@ fun MedicationEditorDialog(
     }
 
     if (showTimePicker) {
-        val parts = orarioNotifica.split(":")
+        val orariList = orarioNotifica.split(",").filter { it.isNotBlank() }.toMutableList()
+        val targetTime = if (timePickerTargetIndex >= 0 && timePickerTargetIndex < orariList.size) {
+            orariList[timePickerTargetIndex]
+        } else "08:00"
+
+        val parts = targetTime.split(":")
         val initialHour = parts.getOrNull(0)?.toIntOrNull() ?: 8
         val initialMinute = parts.getOrNull(1)?.toIntOrNull() ?: 0
 
@@ -97,7 +256,13 @@ fun MedicationEditorDialog(
             onDismissRequest = { showTimePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    orarioNotifica = String.format("%02d:%02d", tpState.hour, tpState.minute)
+                    val newTime = String.format("%02d:%02d", tpState.hour, tpState.minute)
+                    if (timePickerTargetIndex >= 0 && timePickerTargetIndex < orariList.size) {
+                        orariList[timePickerTargetIndex] = newTime
+                    } else {
+                        orariList.add(newTime)
+                    }
+                    orarioNotifica = orariList.sorted().joinToString(",")
                     showTimePicker = false
                 }) {
                     Text("OK", color = GreenPrimary, fontWeight = FontWeight.Bold)
@@ -111,6 +276,43 @@ fun MedicationEditorDialog(
         ) {
             TimePicker(state = tpState)
         }
+    }
+
+    if (showHelpDialog) {
+        AlertDialog(
+            onDismissRequest = { showHelpDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = null, tint = GreenPrimary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Guida Notifiche", fontWeight = FontWeight.Bold, color = Slate900)
+                }
+            },
+            text = {
+                val helpScroll = rememberScrollState()
+                Column(
+                    modifier = Modifier.verticalScroll(helpScroll).heightIn(max = 400.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    HelpItem("ORARI MULTIPLI: Puoi aggiungere più orari di assunzione. Usa il tasto '+' per aggiungerne uno nuovo e la 'X' per rimuoverlo.")
+                    HelpItem("RIPETIZIONE 0: Con valore a zero, la notifica scatterà SOLO per gli orari rimanenti di OGGI. Da domani il promemoria si fermerà.")
+                    HelpItem("FREQUENZA: Se inserisci più orari, la ripetizione viene fissata in 'Giorni' per garantire precisione.")
+                    HelpItem("ANTEPRIMA: Il box colorato in fondo mostra le prossime 5 notifiche. Verificalo sempre per confermare la tua scelta.")
+                    HelpItem("PAUSA: Sospendi un farmaco per bloccare sia gli ordini che i promemoria senza perdere i dati.")
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showHelpDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("HO CAPITO", color = White, fontWeight = FontWeight.Bold)
+                }
+            },
+            containerColor = White,
+            shape = RoundedCornerShape(20.dp)
+        )
     }
 
     Dialog(onDismissRequest = handleDismiss) {
@@ -140,11 +342,19 @@ fun MedicationEditorDialog(
                         fontWeight = FontWeight.Bold,
                         color = Slate900
                     )
-                    IconButton(
-                        onClick = handleDismiss,
-                        modifier = Modifier.background(GrayDarker, CircleShape).size(32.dp)
-                    ) {
-                        Icon(Icons.Default.Close, contentDescription = "Chiudi", tint = Slate900, modifier = Modifier.size(20.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IconButton(
+                            onClick = { showHelpDialog = true },
+                            modifier = Modifier.background(GrayDarker, CircleShape).size(32.dp)
+                        ) {
+                            Text("?", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Slate900)
+                        }
+                        IconButton(
+                            onClick = handleDismiss,
+                            modifier = Modifier.background(GrayDarker, CircleShape).size(32.dp)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = "Chiudi", tint = Slate900, modifier = Modifier.size(20.dp))
+                        }
                     }
                 }
 
@@ -235,20 +445,63 @@ fun MedicationEditorDialog(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.padding(start = 8.dp)
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Text("Orario:", fontSize = 14.sp, color = Slate600)
-                                Surface(
-                                    onClick = { showTimePicker = true },
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = White,
-                                    border = BorderStroke(1.dp, GrayBorder)
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text("Orari:", fontSize = 14.sp, color = Slate600)
+                                val orariList = orarioNotifica.split(",").filter { it.isNotBlank() }
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Text(
-                                        orarioNotifica,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                        fontWeight = FontWeight.Bold,
-                                        color = Slate900
-                                    )
+                                    orariList.forEachIndexed { index, time ->
+                                        Surface(
+                                            onClick = { 
+                                                timePickerTargetIndex = index
+                                                showTimePicker = true 
+                                            },
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = White,
+                                            border = BorderStroke(1.dp, GrayBorder)
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                                            ) {
+                                                Text(
+                                                    time,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Slate900,
+                                                    fontSize = 14.sp
+                                                )
+                                                Spacer(Modifier.width(4.dp))
+                                                Icon(
+                                                    Icons.Default.Close,
+                                                    contentDescription = "Rimuovi",
+                                                    modifier = Modifier
+                                                        .size(14.dp)
+                                                        .clickable {
+                                                            val newList = orariList.toMutableList()
+                                                            newList.removeAt(index)
+                                                            orarioNotifica = newList.joinToString(",")
+                                                        },
+                                                    tint = Color.Red
+                                                )
+                                            }
+                                        }
+                                    }
+                                    
+                                    IconButton(
+                                        onClick = { 
+                                            timePickerTargetIndex = -1
+                                            showTimePicker = true 
+                                        },
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .background(GreenPrimary, CircleShape)
+                                    ) {
+                                        Icon(Icons.Default.Add, contentDescription = "Aggiungi", tint = White, modifier = Modifier.size(20.dp))
+                                    }
                                 }
                             }
 
@@ -283,7 +536,7 @@ fun MedicationEditorDialog(
                                     }
                                     
                                     if (frequenzaValore == 0) {
-                                        Text("Nessuna ripetizione", fontSize = 14.sp, color = Slate600, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                                        Text("Solo oggi (nessuna ripetizione)", fontSize = 14.sp, color = Slate600, fontStyle = FontStyle.Italic)
                                     } else {
                                         Row(
                                             modifier = Modifier
@@ -292,17 +545,19 @@ fun MedicationEditorDialog(
                                         ) {
                                             listOf("ORE", "GIORNI").forEach { tipo ->
                                                 val selected = frequenzaTipo == tipo
+                                                val enabled = !isMultipleTimes || tipo == "GIORNI"
+                                                
                                                 Surface(
                                                     modifier = Modifier
-                                                        .clickable { frequenzaTipo = tipo }
+                                                        .clickable(enabled = enabled) { frequenzaTipo = tipo }
                                                         .width(50.dp),
-                                                    color = if (selected) GreenPrimary else Color.Transparent,
+                                                    color = if (selected) GreenPrimary else if (!enabled) GrayBorder.copy(alpha = 0.3f) else Color.Transparent,
                                                     shape = RoundedCornerShape(8.dp)
                                                 ) {
                                                     Text(
                                                         text = if (tipo == "ORE") "Ore" else "GG",
                                                         modifier = Modifier.padding(vertical = 8.dp),
-                                                        color = if (selected) White else Slate600,
+                                                        color = if (selected) White else if (!enabled) GrayBorder else Slate600,
                                                         fontSize = 12.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         textAlign = TextAlign.Center
@@ -312,7 +567,16 @@ fun MedicationEditorDialog(
                                         }
                                     }
                                 }
+                                if (isMultipleTimes) {
+                                    Text("Con più orari la ripetizione è impostata in giorni.", fontSize = 11.sp, color = Slate600, fontStyle = FontStyle.Italic)
+                                }
                             }
+                            
+                            NotificationPreview(
+                                orarioNotifica = orarioNotifica,
+                                frequenzaValore = frequenzaValore,
+                                frequenzaTipo = frequenzaTipo
+                            )
                         }
                     }
                 }
@@ -375,6 +639,7 @@ fun MedicationEditorDialog(
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -33,41 +33,54 @@ object NotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val calendar = Calendar.getInstance().apply {
-            val parts = medication.orarioNotifica.split(":")
-            if (parts.size == 2) {
-                set(Calendar.HOUR_OF_DAY, parts[0].toIntOrNull() ?: 8)
-                set(Calendar.MINUTE, parts[1].toIntOrNull() ?: 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-        }
-
         val currentTime = System.currentTimeMillis()
-        var scheduleTime = calendar.timeInMillis
+        val orari = medication.orarioNotifica.split(",").filter { it.isNotBlank() }
+        if (orari.isEmpty()) return
 
-        // Se l'orario base è passato, cerchiamo la prossima ripetizione oggi o domani/futuro
-        if (scheduleTime <= currentTime) {
-            if (medication.frequenzaValore > 0) {
-                if (medication.frequenzaTipo == "ORE") {
-                    // Calcoliamo quante ripetizioni servono per arrivare al futuro (in ore)
-                    while (scheduleTime <= currentTime) {
-                        calendar.add(Calendar.HOUR_OF_DAY, medication.frequenzaValore)
-                        scheduleTime = calendar.timeInMillis
+        var nextScheduleTime = Long.MAX_VALUE
+
+        for (orario in orari) {
+            val calendar = Calendar.getInstance().apply {
+                val parts = orario.split(":")
+                if (parts.size == 2) {
+                    set(Calendar.HOUR_OF_DAY, parts[0].toIntOrNull() ?: 8)
+                    set(Calendar.MINUTE, parts[1].toIntOrNull() ?: 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+            }
+
+            var scheduleTime = calendar.timeInMillis
+
+            // Se l'orario base è passato, cerchiamo la prossima ripetizione oggi o domani/futuro
+            if (scheduleTime <= currentTime) {
+                if (medication.frequenzaValore > 0) {
+                    if (medication.frequenzaTipo == "ORE") {
+                        // Calcoliamo quante ripetizioni servono per arrivare al futuro (in ore)
+                        while (scheduleTime <= currentTime) {
+                            calendar.add(Calendar.HOUR_OF_DAY, medication.frequenzaValore)
+                            scheduleTime = calendar.timeInMillis
+                        }
+                    } else {
+                        // Calcoliamo quante ripetizioni servono per arrivare al futuro (in giorni)
+                        while (scheduleTime <= currentTime) {
+                            calendar.add(Calendar.DAY_OF_YEAR, medication.frequenzaValore)
+                            scheduleTime = calendar.timeInMillis
+                        }
                     }
                 } else {
-                    // Calcoliamo quante ripetizioni servono per arrivare al futuro (in giorni)
-                    while (scheduleTime <= currentTime) {
-                        calendar.add(Calendar.DAY_OF_YEAR, medication.frequenzaValore)
-                        scheduleTime = calendar.timeInMillis
-                    }
+                    // Nessuna ripetizione: se l'orario è passato, non facciamo nulla.
+                    // L'orario rimarrà nel passato e non verrà considerato per la schedulazione.
                 }
-            } else {
-                // Nessuna ripetizione, programma per domani alla stessa ora
-                calendar.add(Calendar.DAY_OF_YEAR, 1)
-                scheduleTime = calendar.timeInMillis
+            }
+            
+            if (scheduleTime > currentTime && scheduleTime < nextScheduleTime) {
+                nextScheduleTime = scheduleTime
             }
         }
+
+        if (nextScheduleTime == Long.MAX_VALUE) return
+        val scheduleTime = nextScheduleTime
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
