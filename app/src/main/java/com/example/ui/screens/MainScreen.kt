@@ -1,9 +1,12 @@
 package com.example.ui.screens
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -43,6 +46,31 @@ import com.example.ui.viewmodel.MainViewModel
 @Composable
 fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // Messaggio di saluto in uscita con ritardo per favorire la lettura
+    BackHandler {
+        // Mostriamo il messaggio (rimarrà visibile anche dopo la chiusura)
+        Toast.makeText(
+            context.applicationContext,
+            "Grazie! Se l'app ti è utile, consigliala a parenti ed amici.",
+            Toast.LENGTH_LONG
+        ).show()
+        
+        // Lanciamo la chiusura dopo 1.5 secondi per dare tempo agli occhi di inquadrare il Toast
+        scope.launch {
+            delay(1500)
+            var currentContext = context
+            while (currentContext is android.content.ContextWrapper) {
+                if (currentContext is Activity) {
+                    currentContext.finish()
+                    break
+                }
+                currentContext = currentContext.baseContext
+            }
+        }
+    }
+
     val settings by viewModel.settings.collectAsState()
     val medications by viewModel.medications.collectAsState()
     val selectedIds by viewModel.selectedMedicationIds.collectAsState()
