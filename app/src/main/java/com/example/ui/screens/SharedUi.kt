@@ -107,6 +107,12 @@ fun DisclaimerDialog(onAccept: () -> Unit) {
 
 @Composable
 fun HelpDialog(type: String, onDismiss: () -> Unit) {
+    var showFullManual by remember { mutableStateOf(false) }
+
+    if (showFullManual) {
+        ManualContentDialog(onDismiss = { showFullManual = false })
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -123,7 +129,7 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                         HelpItem("Scegli il paziente tramite la barra azzurra in alto (se ne gestisci più di uno).")
                         HelpItem("Seleziona i farmaci cliccando sul loro nome e regola le scatole con + e -.")
                         HelpItem("Premi 'Invia al Medico' per trasmettere l'ordine dei farmaci selezionati.")
-                        HelpItem("In aggiunta, puoi usare 'Messaggio veloce al Medico' per comunicazioni extra (es. febbre o appuntamenti).")
+                        HelpItem("In caso di necessità puoi utilizzare \"Messaggio veloce al Medico\" per comunicazioni extra: \"Ho la febbre...\".")
                         HelpItem("Se desideri sostenere il progetto, clicca sull'icona ☕ in alto a destra.")
                     }
                     "cronologia" -> {
@@ -143,10 +149,6 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            var showFullManual by remember { mutableStateOf(false) }
-            if (showFullManual) {
-                ManualContentDialog(onDismiss = { showFullManual = false })
-            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -358,7 +360,7 @@ fun ManualContentDialog(onDismiss: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 PharmacyCross(modifier = Modifier.size(24.dp))
                 Spacer(modifier = Modifier.width(12.dp))
-                Text("Guida all'Uso RichFarmaci", fontWeight = FontWeight.ExtraBold, color = Slate900, fontSize = 22.sp)
+                Text("Manuale Utente RichFarmaci", fontWeight = FontWeight.ExtraBold, color = Slate900, fontSize = 22.sp)
             }
         },
         text = {
@@ -369,51 +371,51 @@ fun ManualContentDialog(onDismiss: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 ManualSection(
-                    title = "1. INSTALLAZIONE E SICUREZZA",
-                    content = "Da WhatsApp: Clicca sul file e su 'Installa'. Da Email: Scarica l'allegato e clicca sulla notifica. Se appare 'App bloccata', clicca su 'Altre informazioni' e 'Installa comunque'. Autorizza sempre le notifiche al primo avvio.",
+                    title = "1. GUIDA ALL'INSTALLAZIONE (APK)",
+                    content = "Se ricevuto via WhatsApp: clicca sul file e autorizza 'Sorgenti sconosciute'. Se via Email: scarica l'allegato e clicca sulla notifica di download completato. In caso di blocco Play Protect, seleziona 'Installa comunque'.",
                     icon = { Icon(Icons.Default.Info, null, tint = GreenPrimary) }
                 )
 
                 ManualSection(
-                    title = "2. MULTI-PROFILO",
-                    content = "Gestisci più persone separatamente. Ogni profilo è un 'cassetto' isolato. Usa il tasto (+) per aggiungere un nuovo paziente. Cambia profilo cliccando sul nome in alto nella barra azzurra.",
-                    icon = { Icon(Icons.Default.Group, null, tint = GreenPrimary) }
+                    title = "2. AVVISI DI SICUREZZA E PERMESSI",
+                    content = "Autorizza sempre le notifiche al primo avvio per ricevere i promemoria. L'app è sicura, ma essendo esterna al Play Store richiede la conferma manuale dell'utente durante l'installazione.",
+                    icon = { Icon(Icons.Default.Info, null, tint = OrangeAlert) }
                 )
 
                 ManualSection(
-                    title = "3. ANAGRAFICA E CONFIGURAZIONE",
-                    content = "Inserisci dati Paziente e Medico (tasto 'SCEGLI' per rubrica). CONSIGLIO: Fai dei test con un numero di appoggio prima di inserire i dati reali del medico. Il tasto SALVA diventa ROSSO se ci sono modifiche.",
+                    title = "3. CONFIGURAZIONE E PROFILI",
+                    content = "Inserisci i dati di Paziente e Medico. Puoi gestire più persone (Multiprofilo) separatamente usando il tasto (+) in alto a destra. Ricorda di premere 'SALVA CONFIGURAZIONE' se il tasto diventa rosso.",
                     icon = { Icon(Icons.Default.Settings, null, tint = GreenPrimary) }
                 )
                 
                 ManualSection(
-                    title = "4. INVIO E CANALI",
-                    content = "Scegli tra WhatsApp, SMS o Email (bordo verde). Personalizza frase di testa e coda. L'invio NON è immediato: potrai controllare il messaggio nel canale scelto prima di spedirlo.",
-                    icon = { Icon(Icons.AutoMirrored.Filled.Chat, null, tint = GreenPrimary) }
-                )
-
-                ManualSection(
-                    title = "5. FARMACI E NOTIFICHE",
-                    content = "Aggiungi farmaci con quantità standard. Se le notifiche sono attive, imposta orari (anche multipli) e frequenza. Il tasto (?) nell'editor farmaco spiega come gestire orari e anteprime.",
+                    title = "4. GESTIONE FARMACI E NOTIFICHE",
+                    content = "Aggiungi i tuoi farmaci impostando scatole e orari. Se attivi le notifiche, puoi scegliere frequenza giornaliera o a intervalli di ore. Verifica l'anteprima delle prossime 5 notifiche nel box colorato.",
                     icon = { Icon(Icons.Default.Add, null, tint = GreenPrimary) }
                 )
 
                 ManualSection(
-                    title = "6. RICHIESTE E CRONOLOGIA",
-                    content = "Seleziona i farmaci e premi 'INVIA AL MEDICO'. La Cronologia salva tutti gli invii effettuati in ordine cronologico.",
+                    title = "5. RICHIESTA FARMACI",
+                    content = "Seleziona i farmaci e regola le quantità con + e -. Il messaggio (WhatsApp/SMS/Email) viene preparato automaticamente: potrai controllarlo o modificarlo prima dell'invio effettivo al medico.",
                     icon = { Icon(Icons.AutoMirrored.Filled.Send, null, tint = GreenPrimary) }
+                )
+
+                ManualSection(
+                    title = "6. RISOLUZIONE PROBLEMI (BATTERIA)",
+                    content = "Se i promemoria non arrivano, vai nelle impostazioni del telefono (App -> RichFarmaci -> Batteria) e imposta su 'Senza restrizioni'. Questo evita che il sistema chiuda l'app per risparmiare energia.",
+                    icon = { Icon(Icons.Default.Info, null, tint = GreenPrimary) }
                 )
                 
                 ManualSection(
-                    title = "7. BATTERIA E RESPONSABILITÀ",
-                    content = "Imposta l'app su 'Senza restrizioni' nelle impostazioni batteria per notifiche affidabili. L'app è un supporto logistico, verifica sempre l'effettivo invio delle richieste.",
+                    title = "7. RESPONSABILITÀ (DISCLAIMER)",
+                    content = "L'app ha scopo logistico e non sostituisce il medico. Lo sviluppatore non risponde di mancati invii o errori. L'utente è tenuto a verificare sempre l'effettivo recapito delle richieste.",
                     icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
                     isWarning = true
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    "Versione: 2.1.0\nSupporto tecnico: mgatt1965@gmail.com",
+                    "Supporto tecnico: mgatt1965@gmail.com",
                     fontSize = 11.sp,
                     color = Slate600,
                     textAlign = TextAlign.Center,
@@ -428,7 +430,7 @@ fun ManualContentDialog(onDismiss: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("CHIUDI GUIDA", color = White, fontWeight = FontWeight.Bold)
+                Text("CHIUDI MANUALE", color = White, fontWeight = FontWeight.Bold)
             }
         },
         shape = RoundedCornerShape(20.dp),

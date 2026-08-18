@@ -205,6 +205,11 @@ fun MedicationEditorDialog(
     var timePickerTargetIndex by remember { mutableIntStateOf(-1) }
     var showWarningBanner by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
+    var showFullManual by remember { mutableStateOf(false) }
+
+    if (showFullManual) {
+        ManualContentDialog(onDismiss = { showFullManual = false })
+    }
 
     LaunchedEffect(showWarningBanner) {
         if (showWarningBanner) {
@@ -302,12 +307,17 @@ fun MedicationEditorDialog(
                 }
             },
             confirmButton = {
-                Button(
-                    onClick = { showHelpDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                    shape = RoundedCornerShape(12.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("HO CAPITO", color = White, fontWeight = FontWeight.Bold)
+                    TextButton(onClick = { showFullManual = true }) {
+                        Text("MANUALE", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                    }
+                    TextButton(onClick = { showHelpDialog = false }) {
+                        Text("Ho capito", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                    }
                 }
             },
             containerColor = White,
@@ -347,7 +357,12 @@ fun MedicationEditorDialog(
                             onClick = { showHelpDialog = true },
                             modifier = Modifier.background(GrayDarker, CircleShape).size(32.dp)
                         ) {
-                            Text("?", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Slate900)
+                            Icon(
+                                Icons.AutoMirrored.Filled.HelpOutline,
+                                contentDescription = "Aiuto",
+                                tint = Slate900,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                         IconButton(
                             onClick = handleDismiss,
