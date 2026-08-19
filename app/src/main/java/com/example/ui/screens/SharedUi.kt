@@ -127,7 +127,7 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                 when(type) {
                     "richiesta" -> {
                         HelpItem("Scegli il paziente tramite la barra azzurra in alto (se ne gestisci più di uno).")
-                        HelpItem("Seleziona i farmaci cliccando sul loro nome e regola le scatole con + e -.")
+                        HelpItem("Seleziona i farmaci cliccando sul loro nome e regola il numero delle scatole con + e -.")
                         HelpItem("Premi 'Invia al Medico' per trasmettere l'ordine dei farmaci selezionati.")
                         HelpItem("In caso di necessità puoi utilizzare \"Messaggio veloce al Medico\" per comunicazioni extra: \"Ho la febbre...\".")
                         HelpItem("Se desideri sostenere il progetto, clicca sull'icona ☕ in alto a destra.")
@@ -140,10 +140,11 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                     }
                     "configurazione" -> {
                         HelpItem("Usa la barra azzurra superiore per gestire i profili (aggiungi o elimina).")
-                        HelpItem("1. ANAGRAFICA: Inserisci i dati di Paziente e Medico (usa 'SCEGLI' per la rubrica).")
-                        HelpItem("2. OPZIONI: Scegli il canale (WhatsApp/SMS/Email) e personalizza i saluti.")
-                        HelpItem("3. FARMACI: Aggiungi la tua terapia. Clicca sul tasto '?' dentro la scheda farmaco per i dettagli su notifiche e ripetizioni.")
+                        HelpItem("1. ANAGRAFICA: Inserisci i dati del Paziente e del Medico (quest'ultimo puoi usare 'SCEGLI' per recuperare le informazioni dalla Rubrica).")
+                        HelpItem("2. TIPO INVIO: Scegli la tipologia (WhatsApp/SMS/Email).")
+                        HelpItem("3. NOTIFICHE: Puoi attivare le notifiche per tutti i farmaci con una eventuale descrizione.")
                         HelpItem("SALVATAGGIO: Il tasto diventa ROSSO se ci sono modifiche. Cliccalo per confermare.")
+                        HelpItem("GESTORE RUBRICA FARMACI: Puoi aggiungere/togliere i farmaci abituali con un numero standard di scatole.")
                     }
                 }
             }

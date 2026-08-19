@@ -3,10 +3,8 @@ package com.example.ui.screens
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -36,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -46,20 +45,17 @@ import com.example.ui.viewmodel.MainViewModel
 @Composable
 fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    var isExiting by remember { mutableStateOf(false) }
 
-    // Messaggio di saluto in uscita con ritardo per favorire la lettura
-    BackHandler {
-        // Mostriamo il messaggio (rimarrà visibile anche dopo la chiusura)
-        Toast.makeText(
-            context.applicationContext,
-            "Grazie! Se l'app ti è utile, consigliala a parenti ed amici.",
-            Toast.LENGTH_LONG
-        ).show()
-        
-        // Lanciamo la chiusura dopo 1.5 secondi per dare tempo agli occhi di inquadrare il Toast
-        scope.launch {
-            delay(1500)
+    // Intercetta l'uscita e mostra la schermata di saluto
+    BackHandler(enabled = !isExiting) {
+        isExiting = true
+    }
+
+    // Gestisce la chiusura automatica dopo 3 secondi
+    if (isExiting) {
+        LaunchedEffect(Unit) {
+            delay(3000)
             var currentContext = context
             while (currentContext is android.content.ContextWrapper) {
                 if (currentContext is Activity) {
@@ -290,154 +286,173 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
                     }
                 }
 
-                // Profile Selector Context Switcher
-                ProfileContextSwitcher(
-                    profiles = profiles,
-                    activeProfile = activeProfile,
-                    onProfileSelected = { viewModel.selectProfile(it) }
-                )
-
-                TabRow(
-                    selectedTabIndex = currentTab,
-                    containerColor = White,
-                    contentColor = GreenPrimary,
-                    indicator = { tabPositions ->
-                        TabRowDefaults.SecondaryIndicator(
-                            Modifier.tabIndicatorOffset(tabPositions[currentTab]),
-                            color = GreenPrimary
+                if (isExiting) {
+                    // Schermata di Saluto (mantiene la testata sopra)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Grazie per aver usato l'app!\n\nSe ti è stata utile, consigliala a parenti ed amici.",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Slate900,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 30.sp
                         )
                     }
-                ) {
-                    Tab(
-                        selected = currentTab == 0,
-                        onClick = { viewModel.selectTab(0) },
-                        text = { Text("Richiesta", fontWeight = FontWeight.Bold) },
-                        icon = { Icon(Icons.Default.EditNote, contentDescription = null) },
-                        selectedContentColor = GreenPrimary,
-                        unselectedContentColor = Slate600
+                } else {
+                    // Contenuto normale dell'app (Nascosto durante l'uscita)
+                    ProfileContextSwitcher(
+                        profiles = profiles,
+                        activeProfile = activeProfile,
+                        onProfileSelected = { viewModel.selectProfile(it) }
                     )
-                    Tab(
-                        selected = currentTab == 1,
-                        onClick = { viewModel.selectTab(1) },
-                        text = { Text("Cronologia", fontWeight = FontWeight.Bold) },
-                        icon = { Icon(Icons.Default.History, contentDescription = null) },
-                        selectedContentColor = GreenPrimary,
-                        unselectedContentColor = Slate600
-                    )
-                }
 
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (currentTab == 0) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = "Cosa ti serve oggi?",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Slate900
+                    TabRow(
+                        selectedTabIndex = currentTab,
+                        containerColor = White,
+                        contentColor = GreenPrimary,
+                        indicator = { tabPositions ->
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(tabPositions[currentTab]),
+                                color = GreenPrimary
                             )
-
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(1),
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(10.dp),
-                                contentPadding = PaddingValues(top = 8.dp, bottom = 160.dp)
-                            ) {
-                                items(medications.filter { !it.inPausa && it.scatole > 0 }) { med ->
-                                    val isSelected = selectedIds.contains(med.id)
-                                    val quantity = selectedQuantities[med.id] ?: 0
-                                    MedicationItem(
-                                        med = med,
-                                        isSelected = isSelected,
-                                        requestedQuantity = quantity,
-                                        notificationsEnabled = settings.notificheAttive,
-                                        onQuantityChange = { viewModel.updateSelection(med, it) }
-                                    )
-                                }
-                            }
                         }
+                    ) {
+                        Tab(
+                            selected = currentTab == 0,
+                            onClick = { viewModel.selectTab(0) },
+                            text = { Text("Richiesta", fontWeight = FontWeight.Bold) },
+                            icon = { Icon(Icons.Default.EditNote, contentDescription = null) },
+                            selectedContentColor = GreenPrimary,
+                            unselectedContentColor = Slate600
+                        )
+                        Tab(
+                            selected = currentTab == 1,
+                            onClick = { viewModel.selectTab(1) },
+                            text = { Text("Cronologia", fontWeight = FontWeight.Bold) },
+                            icon = { Icon(Icons.Default.History, contentDescription = null) },
+                            selectedContentColor = GreenPrimary,
+                            unselectedContentColor = Slate600
+                        )
+                    }
 
-                        // Bottom Actions
-                        val selectedCount = selectedIds.size
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            AnimatedVisibility(
-                                visible = selectedCount > 0,
-                                enter = fadeIn() + expandVertically(),
-                                exit = fadeOut() + shrinkVertically()
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (currentTab == 0) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp)
                             ) {
-                                Button(
-                                    onClick = {
-                                        val message = viewModel.buildFormattedMessage()
-                                        val intent = viewModel.generateRequestIntent(context)
-                                        if (intent != null) {
-                                            context.startActivity(intent)
-                                            viewModel.recordSentRequest(message)
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(64.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                                    shape = RoundedCornerShape(16.dp),
-                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
-                                ) {
-                                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = White)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "INVIA AL MEDICO ($selectedCount)",
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = White
-                                    )
-                                }
-                            }
-
-                            // Tasto Messaggio Veloce (Sempre visibile in fondo)
-                            OutlinedButton(
-                                onClick = { showQuickMessageDialog = true },
-                                modifier = Modifier.fillMaxWidth().height(48.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, GreenPrimary),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    containerColor = White.copy(alpha = 0.9f),
-                                    contentColor = GreenPrimary
+                                Text(
+                                    text = "Cosa ti serve oggi?",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Slate900
                                 )
-                            ) {
-                                Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("MESSAGGIO VELOCE AL MEDICO", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(1),
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                    contentPadding = PaddingValues(top = 8.dp, bottom = 160.dp)
+                                ) {
+                                    items(medications.filter { !it.inPausa && it.scatole > 0 }) { med ->
+                                        val isSelected = selectedIds.contains(med.id)
+                                        val quantity = selectedQuantities[med.id] ?: 0
+                                        MedicationItem(
+                                            med = med,
+                                            isSelected = isSelected,
+                                            requestedQuantity = quantity,
+                                            notificationsEnabled = settings.notificheAttive,
+                                            onQuantityChange = { viewModel.updateSelection(med, it) }
+                                        )
+                                    }
+                                }
                             }
-                        }
-                    } else {
-                        // History Screen
-                        if (sentRequests.isEmpty()) {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(64.dp), tint = GrayBorder)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Nessuna richiesta inviata.", color = Slate600)
+
+                            // Bottom Actions
+                            val selectedCount = selectedIds.size
+                            Column(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                AnimatedVisibility(
+                                    visible = selectedCount > 0,
+                                    enter = fadeIn() + expandVertically(),
+                                    exit = fadeOut() + shrinkVertically()
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            val message = viewModel.buildFormattedMessage()
+                                            val intent = viewModel.generateRequestIntent(context)
+                                            if (intent != null) {
+                                                context.startActivity(intent)
+                                                viewModel.recordSentRequest(message)
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(64.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                                        shape = RoundedCornerShape(16.dp),
+                                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+                                    ) {
+                                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = White)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "INVIA AL MEDICO ($selectedCount)",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = White
+                                        )
+                                    }
+                                }
+
+                                // Tasto Messaggio Veloce (Sempre visibile in fondo)
+                                OutlinedButton(
+                                    onClick = { showQuickMessageDialog = true },
+                                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, GreenPrimary),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = White.copy(alpha = 0.9f),
+                                        contentColor = GreenPrimary
+                                    )
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("MESSAGGIO VELOCE AL MEDICO", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                             }
                         } else {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                                contentPadding = PaddingValues(16.dp)
-                            ) {
-                                items(sentRequests) { request ->
-                                    HistoryItem(
-                                        request = request,
-                                        onView = { viewingRequestText = request.testoCompleto },
-                                        onDelete = { viewModel.deleteHistoryItem(request) }
-                                    )
+                            // History Screen
+                            if (sentRequests.isEmpty()) {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(64.dp), tint = GrayBorder)
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text("Nessuna richiesta inviata.", color = Slate600)
+                                    }
+                                }
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    contentPadding = PaddingValues(16.dp)
+                                ) {
+                                    items(sentRequests) { request ->
+                                        HistoryItem(
+                                            request = request,
+                                            onView = { viewingRequestText = request.testoCompleto },
+                                            onDelete = { viewModel.deleteHistoryItem(request) }
+                                        )
+                                    }
                                 }
                             }
                         }
