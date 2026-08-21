@@ -4,7 +4,7 @@ Benvenuto in **RichFarmaci**, l'assistente intelligente per la gestione del tuo 
 
 ---
 
-## 1. Guida all'Installazione (APK)
+## 1 - 🔴 Guida all'Installazione (APK)
 
 Poiché l'applicazione viene distribuita direttamente (non tramite il Play Store), la procedura cambia leggermente a seconda di come hai ricevuto il file. Scegli il tuo caso:
 
@@ -22,7 +22,7 @@ Poiché l'applicazione viene distribuita direttamente (non tramite il Play Store
 
 ---
 
-## 2. Avvisi di Sicurezza Comuni
+## 2 - 🔴 Avvisi di Sicurezza Comuni
 
 Durante l'installazione potresti vedere questi messaggi:
 
@@ -42,7 +42,7 @@ In alto è presente un tasto **"?"** che consente di accedere a una guida in lin
 
 ---
 
-## 3. Configurazione
+## 3 - Configurazione
 
 In questo documento viene analizzata per prima, anche se posta in secondo piano, e vi si accede in automatico al primo accesso o tramite il tasto in alto a destra a forma di ingranaggio. Questa sezione è il "cuore" dell'applicazione. Si possono inserire le informazioni del paziente, del medico e dei farmaci necessarie al buon funzionamento dell'app.
 
@@ -88,7 +88,7 @@ In un secondo momento è possibile mettere in **"Pausa"** eventuali farmaci mome
 
 ---
 
-## 4. Richiesta Farmaci
+## 4 - Richiesta Farmaci
 
 ### 4.1 Invio Richiesta
 Dopo aver impostato la Configurazione, è possibile procedere con la richiesta dei farmaci. Per ogni paziente viene proposto l'elenco dei farmaci attivi (non in pausa).
@@ -107,21 +107,35 @@ Tutte le richieste inviate sono salvate qui in ordine cronologico.
 
 ---
 
-## 5. Sostieni il Progetto
+## 5 - Sostieni il Progetto
 Icona della tazzina di caffè (PayPal). Transazione singola da 5€ per sostenere lo sviluppo (massimo 2 volte).
 
 ---
 
-## 6. Risoluzione Problemi e Supporto
+## 6 - 🔴 Non ricevi le notifiche? Ecco come attivarle in 1 minuto
 
-### 6.1 Problemi con le Notifiche?
-Se i promemoria non arrivano:
-1. Vai in **Impostazioni telefono -> App -> RichFarmaci**.
-2. **Batteria:** Imposta su **"Senza restrizioni"** o **"Non ottimizzare"**.
+Se la nostra app non ti invia le notifiche, o se arrivano in silenzio senza fare rumore, segui questi semplici passaggi sul tuo telefono Android:
 
-**Supporto tecnico:** mgatt1965@gmail.com
+**Apri le Impostazioni dell'app**
+- Cerca l'icona della nostra app sullo schermo del tuo telefono.
+- Tieni premuto il dito sull'icona per due secondi.
+- Tocca il simbolo **( i )** oppure la voce **"Informazioni app"** dal menu che compare.
+
+**Attiva la ricezione dei messaggi**
+- Tocca la voce **"Notifiche"**.
+- Assicurati che l'interruttore principale in alto **"Consenti notifiche"** (o "Mostra notifiche") sia acceso (colorato).
+
+**Attiva i suoni e la vibrazione**
+- Nella stessa schermata, controlla che non sia selezionata la voce **"Silenzioso"**. Scegli invece **"Predefinito"** (oppure "Suono e vibrazione").
+- Se vedi un elenco con scritto **"Categorie di notifica"** (o Canali), tocca le singole voci (ad esempio: Avvisi, Messaggi) e verifica che per ognuna sia attivo il Suono e la Vibrazione.
 
 ---
 
-## 7. Limitazione di Responsabilità (Disclaimer)
+## 7 - 🔴 Limitazione di Responsabilità (Disclaimer)
+
 L’applicazione ha scopo puramente gestionale. Non sostituisce il parere medico. Lo sviluppatore non risponde di mancati recapiti o malfunzionamenti delle notifiche. L'utente è tenuto a verificare sempre l'effettivo invio delle richieste.
+
+---
+
+## 8 - Se l'app ti è piaciuta
+Grazie per aver usato l'app! Se ti è stata utile, consigliala a parenti ed amici.

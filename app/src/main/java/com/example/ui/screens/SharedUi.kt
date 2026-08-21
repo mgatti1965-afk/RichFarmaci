@@ -67,7 +67,7 @@ fun DisclaimerDialog(onAccept: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Info, contentDescription = null, tint = Color.Red.copy(alpha = 0.7f))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Limitazione di Responsabilità", fontWeight = FontWeight.Bold, color = Slate900)
+                Text(text = "Limitazione di Responsabilità", fontWeight = FontWeight.Bold, color = Color.Red.copy(alpha = 0.8f))
             }
         },
         text = {
@@ -383,46 +383,58 @@ fun ManualContentDialog(onDismiss: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 ManualSection(
-                    title = "1. GUIDA ALL'INSTALLAZIONE (APK)",
+                    title = "1 - GUIDA ALL'INSTALLAZIONE (APK)",
                     content = "Se ricevuto via WhatsApp: clicca sul file e autorizza 'Sorgenti sconosciute'. Se via Email: scarica l'allegato e clicca sulla notifica di download completato. In caso di blocco Play Protect, seleziona 'Installa comunque'.",
-                    icon = { Icon(Icons.Default.Info, null, tint = GreenPrimary) }
+                    icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
+                    isWarning = true
                 )
 
                 ManualSection(
-                    title = "2. AVVISI DI SICUREZZA E PERMESSI",
+                    title = "2 - AVVISI DI SICUREZZA E PERMESSI",
                     content = "Autorizza sempre le notifiche al primo avvio per ricevere i promemoria. L'app è sicura, ma essendo esterna al Play Store richiede la conferma manuale dell'utente durante l'installazione.",
-                    icon = { Icon(Icons.Default.Info, null, tint = OrangeAlert) }
+                    icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
+                    isWarning = true
                 )
 
                 ManualSection(
-                    title = "3. CONFIGURAZIONE E PROFILI",
-                    content = "Inserisci i dati di Paziente e Medico. Puoi gestire più persone (Multiprofilo) separatamente usando il tasto (+) in alto a destra. Ricorda di premere 'SALVA CONFIGURAZIONE' se il tasto diventa rosso.",
+                    title = "3 - CONFIGURAZIONE E FARMACI",
+                    content = "Gestisci i profili col tasto (+). Inserisci i dati di Paziente e Medico (tasto 'SCEGLI'). Aggiungi i farmaci impostando scatole e orari (giorni o ore). Salva sempre se il tasto diventa ROSSO.",
                     icon = { Icon(Icons.Default.Settings, null, tint = GreenPrimary) }
                 )
-                
-                ManualSection(
-                    title = "4. GESTIONE FARMACI E NOTIFICHE",
-                    content = "Aggiungi i tuoi farmaci impostando scatole e orari. Se attivi le notifiche, puoi scegliere frequenza giornaliera o a intervalli di ore. Verifica l'anteprima delle prossime 5 notifiche nel box colorato.",
-                    icon = { Icon(Icons.Default.Add, null, tint = GreenPrimary) }
-                )
 
                 ManualSection(
-                    title = "5. RICHIESTA FARMACI",
-                    content = "Seleziona i farmaci e regola le quantità con + e -. Il messaggio (WhatsApp/SMS/Email) viene preparato automaticamente: potrai controllarlo o modificarlo prima dell'invio effettivo al medico.",
+                    title = "4 - RICHIESTA E CRONOLOGIA",
+                    content = "Seleziona i farmaci e invia l'ordine al medico. Puoi usare il 'Messaggio Veloce' per avvisi rapidi. Tutte le richieste inviate sono consultabili nella scheda 'Cronologia'.",
                     icon = { Icon(Icons.AutoMirrored.Filled.Send, null, tint = GreenPrimary) }
                 )
 
                 ManualSection(
-                    title = "6. RISOLUZIONE PROBLEMI (BATTERIA)",
-                    content = "Se i promemoria non arrivano, vai nelle impostazioni del telefono (App -> RichFarmaci -> Batteria) e imposta su 'Senza restrizioni'. Questo evita che il sistema chiuda l'app per risparmiare energia.",
-                    icon = { Icon(Icons.Default.Info, null, tint = GreenPrimary) }
+                    title = "5 - SOSTIENI IL PROGETTO",
+                    content = "Clicca sull'icona della tazzina (☕) per sostenere lo sviluppo con un piccolo contributo tramite PayPal (massimo 2 volte). Ti ringraziamo immensamente per il tuo supporto!",
+                    icon = { Text("☕", fontSize = 20.sp) }
+                )
+
+                ManualSection(
+                    title = "6 - NON RICEVI LE NOTIFICHE?",
+                    content = "Se l'app non invia notifiche o sono silenziose, segui questi passaggi:\n\n" +
+                            "• APRI IMPOSTAZIONI: Tieni premuta l'icona dell'app per due secondi e tocca il simbolo ( i ) o 'Informazioni app'.\n\n" +
+                            "• ATTIVA RICEZIONE: Tocca 'Notifiche' e assicurati che 'Consenti notifiche' sia acceso.\n\n" +
+                            "• ATTIVA SUONI E VIBRAZIONE: Verifica che non sia su 'Silenzioso'. Tocca 'Categorie di notifica' e per ogni voce (Avvisi, Messaggi) attiva Suono e Vibrazione.",
+                    icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
+                    isWarning = true
                 )
                 
                 ManualSection(
-                    title = "7. RESPONSABILITÀ (DISCLAIMER)",
+                    title = "7 - RESPONSABILITÀ (DISCLAIMER)",
                     content = "L'app ha scopo logistico e non sostituisce il medico. Lo sviluppatore non risponde di mancati invii o errori. L'utente è tenuto a verificare sempre l'effettivo recapito delle richieste.",
                     icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
                     isWarning = true
+                )
+
+                ManualSection(
+                    title = "8 - SE L'APP TI È PIACIUTA",
+                    content = "Grazie per aver usato l'app! Se ti è stata utile, consigliala a parenti ed amici.",
+                    icon = { Icon(Icons.Default.Info, null, tint = GreenPrimary) }
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
