@@ -2,8 +2,6 @@ package com.example.ui.screens
 
 import android.app.Activity
 import android.content.ContextWrapper
-import android.app.Activity
-import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

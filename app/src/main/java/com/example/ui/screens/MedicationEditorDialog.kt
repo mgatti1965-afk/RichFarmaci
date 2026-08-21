@@ -553,6 +553,12 @@ fun MedicationEditorDialog(
                                     if (frequenzaValore == 0) {
                                         Text("Solo oggi (nessuna ripetizione)", fontSize = 14.sp, color = Slate600, fontStyle = FontStyle.Italic)
                                     } else {
+                                        Text(
+                                            text = if (frequenzaTipo == "ORE") "ore" else "gg",
+                                            fontSize = 14.sp,
+                                            color = Slate900,
+                                            fontWeight = FontWeight.Medium
+                                        )
                                         Row(
                                             modifier = Modifier
                                                 .background(White, RoundedCornerShape(8.dp))
