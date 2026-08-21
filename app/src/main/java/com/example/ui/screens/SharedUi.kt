@@ -142,7 +142,7 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                         HelpItem("Usa la barra azzurra superiore per gestire i profili (aggiungi o elimina).")
                         HelpItem("1. ANAGRAFICA: Inserisci i dati del Paziente e del Medico (quest'ultimo puoi usare 'SCEGLI' per recuperare le informazioni dalla Rubrica).")
                         HelpItem("2. TIPO INVIO: Scegli la tipologia (WhatsApp/SMS/Email).")
-                        HelpItem("3. NOTIFICHE: Puoi attivare le notifiche per tutti i farmaci con una eventuale descrizione.")
+                        HelpItem("3. NOTIFICHE: Puoi attivare le notifiche per tutti i farmaci con una eventuale descrizione (all'attivazione riceverai una notifica di prova).")
                         HelpItem("SALVATAGGIO: Il tasto diventa ROSSO se ci sono modifiche. Cliccalo per confermare.")
                         HelpItem("GESTORE RUBRICA FARMACI: Puoi aggiungere/togliere i farmaci abituali con un numero standard di scatole.")
                     }

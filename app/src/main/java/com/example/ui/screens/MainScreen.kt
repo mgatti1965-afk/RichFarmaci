@@ -294,14 +294,26 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
                             .padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "Grazie per aver usato l'app!\n\nSe ti è stata utile, consigliala a parenti ed amici.",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Slate900,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 30.sp
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "Grazie per aver usato l'app!",
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = GreenPrimary,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                text = "Se ti è stata utile, consigliala a parenti ed amici.",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Slate900,
+                                textAlign = TextAlign.Center,
+                                lineHeight = 30.sp
+                            )
+                            Spacer(modifier = Modifier.height(48.dp))
+                            PharmacyCross(modifier = Modifier.size(64.dp))
+                        }
                     }
                 } else {
                     // Contenuto normale dell'app (Nascosto durante l'uscita)

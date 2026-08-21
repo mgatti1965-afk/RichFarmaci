@@ -45,6 +45,7 @@ import com.example.data.model.PatientSettings
 import com.example.data.model.Profile
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MainViewModel
+import com.example.util.NotificationHelper
 import com.example.util.capitalizeWords
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -380,7 +381,12 @@ fun SettingsPanelContent(
                             Text(text = "Attiva Notifiche", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900)
                             Switch(
                                 checked = nAttive,
-                                onCheckedChange = { nAttive = it },
+                                onCheckedChange = { 
+                                    nAttive = it 
+                                    if (it) {
+                                        NotificationHelper.sendTestNotification(context)
+                                    }
+                                },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = White,
                                     checkedTrackColor = GreenPrimary,

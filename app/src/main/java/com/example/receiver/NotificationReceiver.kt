@@ -5,7 +5,11 @@ import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.media.RingtoneManager
 import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.core.app.NotificationCompat
 import com.example.data.db.AppDatabase
 import com.example.data.preferences.PatientSettingsManager
@@ -26,35 +30,12 @@ class NotificationReceiver : BroadcastReceiver() {
         val medicationName = intent.getStringExtra("medication_name") ?: "Farmaco"
         val description = intent.getStringExtra("description") ?: "È ora di prendere il farmaco"
 
-        showNotification(context, medicationName, description)
+        NotificationHelper.showNotification(context, medicationName, description)
 
         // Reschedule the next occurrence for this specific medication
         rescheduleNextAlarm(context, medicationId)
     }
 
-    private fun showNotification(context: Context, title: String, message: String) {
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "medication_reminders"
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "Promemoria Farmaci",
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle(title)
-            .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .build()
-
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
-    }
 
     private fun rescheduleNextAlarm(context: Context, medicationId: String) {
         val db = AppDatabase.getDatabase(context)
