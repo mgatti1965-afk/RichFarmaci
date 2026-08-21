@@ -1,5 +1,9 @@
 package com.example.ui.screens
 
+import android.app.Activity
+import android.content.ContextWrapper
+import android.app.Activity
+import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -28,22 +32,31 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import com.example.data.model.Profile
 import com.example.ui.theme.*
 
 @Composable
 fun DisclaimerDialog(onAccept: () -> Unit) {
     var showFullManual by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     // Forza la chiusura dell'app se si preme il tasto indietro senza accettare
-    val activity = (androidx.compose.ui.platform.LocalContext.current as? android.app.Activity)
     BackHandler {
-        activity?.finish()
+        var currentContext = context
+        while (currentContext is ContextWrapper) {
+            if (currentContext is Activity) {
+                currentContext.finish()
+                return@BackHandler
+            }
+            currentContext = currentContext.baseContext
+        }
     }
 
     if (showFullManual) {
