@@ -144,8 +144,8 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                         HelpItem("Se desideri sostenere il progetto, clicca sull'icona ☕ in alto a destra.")
                     }
                     "cronologia" -> {
+                        HelpItem("Scegli il paziente tramite la barra azzurra in alto (se ne gestisci più di uno).")
                         HelpItem("Le richieste sono visualizzate in ordine cronologico, dalla più recente alla più vecchia.")
-                        HelpItem("Seleziona il paziente tramite la barra azzurra in alto per vederne lo storico specifico.")
                         HelpItem("Usa 'Visualizza' per leggere il testo completo del messaggio inviato.")
                         HelpItem("Puoi eliminare le vecchie richieste usando l'icona del cestino.")
                     }
