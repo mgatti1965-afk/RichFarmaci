@@ -100,67 +100,16 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
     }
 
     if (showDonationDialog) {
-        val isBlocked = donationCount >= 2
-        val hasWarning = donationCount == 1
-
-        AlertDialog(
-            onDismissRequest = { showDonationDialog = false },
-            title = { 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = if (isBlocked) "Grazie di cuore! ☕" else "Offri un caffè ☕",
-                        fontWeight = FontWeight.Bold, 
-                        fontSize = 20.sp, 
-                        color = Slate900
-                    )
-                }
-            },
-            text = {
-                Column {
-                    if (hasWarning) {
-                        Text(
-                            "ATTENZIONE: Hai già sostenuto il progetto in precedenza.\n",
-                            color = Color.Red,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                    }
-                    Text(
-                        text = if (isBlocked) 
-                            "Hai già sostenuto il progetto il numero massimo di volte. Ti ringraziamo immensamente per il tuo supporto!"
-                            else "Sostieni lo sviluppo di RichFarmaci con un contributo di 5€ per un buon caffè.\n\nVerrai reindirizzato su una pagina sicura gestita da PayPal dove potrai scegliere:\n• Se hai un account PayPal, usalo per procedere velocemente.\n• Se NON hai un account, potrai procedere comodamente con la tua carta di credito o prepagata cliccando su 'Paga con una carta'.",
-                        fontSize = 16.sp,
-                        color = Slate600
-                    )
-                }
-            },
-            confirmButton = {
-                if (!isBlocked) {
-                    Button(
-                        onClick = {
-                            showDonationDialog = false
-                            viewModel.incrementDonationCount()
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=marco.gatti65@alice.it&amount=5.00&currency_code=EUR&item_name=Offerta%20Caffe%20RichFarmaci&solution_type=Sole&landing_page=Billing"))
-                            context.startActivity(intent)
-                        },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("SOSTIENI CON 5€", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-                    }
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showDonationDialog = false },
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    Text(if (isBlocked) "CHIUDI" else "ANNULLA", color = Slate600)
-                }
-            },
-            shape = RoundedCornerShape(20.dp),
-            containerColor = White
+        DonationDialog(
+            donationCount = donationCount,
+            appName = "RichFarmaci",
+            onDismiss = { showDonationDialog = false },
+            onConfirm = {
+                showDonationDialog = false
+                viewModel.incrementDonationCount()
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=marco.gatti65@alice.it&amount=5.00&currency_code=EUR&item_name=Offerta%20Caffe%20RichFarmaci&solution_type=Sole&landing_page=Billing"))
+                context.startActivity(intent)
+            }
         )
     }
 
