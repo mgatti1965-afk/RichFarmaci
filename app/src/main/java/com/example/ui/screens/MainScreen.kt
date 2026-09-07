@@ -28,9 +28,14 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,9 +47,11 @@ import com.example.data.model.Profile
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MainViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     var isExiting by remember { mutableStateOf(false) }
 
     // Intercetta l'uscita e mostra la schermata di saluto
@@ -84,6 +91,9 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
     var helpType by remember { mutableStateOf<String?>(null) }
     var viewingRequestText by remember { mutableStateOf<String?>(null) }
     var showDonationDialog by remember { mutableStateOf(false) }
+    var showTestPasswordDialog by remember { mutableStateOf(false) }
+    var testPassword by remember { mutableStateOf("") }
+    var isTestMode by remember { mutableStateOf(false) }
     var showQuickMessageDialog by remember { mutableStateOf(false) }
     var quickMessageText by remember { mutableStateOf("") }
 
@@ -103,13 +113,67 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
         DonationDialog(
             donationCount = donationCount,
             appName = "RichFarmaci",
-            onDismiss = { showDonationDialog = false },
+            onDismiss = { 
+                showDonationDialog = false
+                isTestMode = false 
+            },
             onConfirm = {
                 showDonationDialog = false
-                viewModel.incrementDonationCount()
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=marco.gatti65@alice.it&amount=5.00&currency_code=EUR&item_name=Offerta%20Caffe%20RichFarmaci&solution_type=Sole&landing_page=Billing"))
+                if (!isTestMode) {
+                    viewModel.incrementDonationCount()
+                }
+                val baseUrl = if (isTestMode) "https://www.sandbox.paypal.com/cgi-bin/webscr" else "https://www.paypal.com/cgi-bin/webscr"
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("$baseUrl?cmd=_xclick&business=marco.gatti65@alice.it&amount=5.00&currency_code=EUR&item_name=Offerta%20Caffe%20RichFarmaci&solution_type=Sole&landing_page=Billing"))
                 context.startActivity(intent)
+                isTestMode = false
             }
+        )
+    }
+
+    if (showTestPasswordDialog) {
+        AlertDialog(
+            onDismissRequest = { showTestPasswordDialog = false },
+            title = { Text("Accesso Modalità Test", fontWeight = FontWeight.Bold, color = Slate900) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Inserisci la password per attivare i pagamenti di test (Sandbox).", fontSize = 14.sp, color = Slate600)
+                    OutlinedTextField(
+                        value = testPassword,
+                        onValueChange = { testPassword = it },
+                        label = { Text("Password") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = GreenPrimary,
+                            unfocusedBorderColor = GrayBorder
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (testPassword == "Nidama01") {
+                        isTestMode = true
+                        showTestPasswordDialog = false
+                        testPassword = ""
+                        showDonationDialog = true
+                    }
+                }) {
+                    Text("ENTRA", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showTestPasswordDialog = false 
+                    testPassword = ""
+                }) {
+                    Text("ANNULLA", color = Slate600)
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = White
         )
     }
 
@@ -214,11 +278,23 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
                         )
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        IconButton(
-                            onClick = { showDonationDialog = true },
-                            modifier = Modifier.background(GrayBackground, CircleShape)
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(GrayBackground)
+                                .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onTap = { showDonationDialog = true },
+                                        onLongPress = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            showTestPasswordDialog = true
+                                        }
+                                    )
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "☕", fontSize = 20.sp)
+                            Text(text = "☕", fontSize = 22.sp)
                         }
                         IconButton(
                             onClick = { helpType = if (currentTab == 0) "richiesta" else "cronologia" },
