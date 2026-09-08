@@ -93,6 +93,7 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
     var showDonationDialog by remember { mutableStateOf(false) }
     var showTestPasswordDialog by remember { mutableStateOf(false) }
     var testPassword by remember { mutableStateOf("") }
+    var isPasswordWrong by remember { mutableStateOf(false) }
     var isTestMode by remember { mutableStateOf(false) }
     var showQuickMessageDialog by remember { mutableStateOf(false) }
     var quickMessageText by remember { mutableStateOf("") }
@@ -139,17 +140,30 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
                     Text("Inserisci la password per attivare i pagamenti di test (Sandbox).", fontSize = 14.sp, color = Slate600)
                     OutlinedTextField(
                         value = testPassword,
-                        onValueChange = { testPassword = it },
+                        onValueChange = { 
+                            testPassword = it
+                            isPasswordWrong = false
+                        },
                         label = { Text("Password") },
+                        isError = isPasswordWrong,
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = GreenPrimary,
-                            unfocusedBorderColor = GrayBorder
+                            unfocusedBorderColor = GrayBorder,
+                            errorBorderColor = Color.Red
                         ),
                         shape = RoundedCornerShape(12.dp)
                     )
+                    if (isPasswordWrong) {
+                        Text(
+                            text = "Password errata.",
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
                 }
             },
             confirmButton = {
@@ -158,7 +172,10 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
                         isTestMode = true
                         showTestPasswordDialog = false
                         testPassword = ""
+                        isPasswordWrong = false
                         showDonationDialog = true
+                    } else {
+                        isPasswordWrong = true
                     }
                 }) {
                     Text("ENTRA", color = GreenPrimary, fontWeight = FontWeight.Bold)
@@ -168,6 +185,7 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
                 TextButton(onClick = { 
                     showTestPasswordDialog = false 
                     testPassword = ""
+                    isPasswordWrong = false
                 }) {
                     Text("ANNULLA", color = Slate600)
                 }
@@ -443,7 +461,7 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
                                         Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = White)
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = "INVIA AL MEDICO ($selectedCount)",
+                                            text = "INVIA RICHIESTA AL MEDICO ($selectedCount)",
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = White
@@ -451,20 +469,25 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
                                     }
                                 }
 
-                                // Tasto Messaggio Veloce (Sempre visibile in fondo)
-                                OutlinedButton(
-                                    onClick = { showQuickMessageDialog = true },
-                                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, GreenPrimary),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        containerColor = White.copy(alpha = 0.9f),
-                                        contentColor = GreenPrimary
-                                    )
+                                // Tasto Messaggio Veloce (Visibile solo se non ci sono farmaci selezionati)
+                                AnimatedVisibility(
+                                    visible = selectedCount == 0,
+                                    enter = fadeIn() + expandVertically(),
+                                    exit = fadeOut() + shrinkVertically()
                                 ) {
-                                    Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, modifier = Modifier.size(20.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("MESSAGGIO VELOCE AL MEDICO", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Button(
+                                        onClick = { showQuickMessageDialog = true },
+                                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = GreenPrimary,
+                                            contentColor = White
+                                        )
+                                    ) {
+                                        Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, modifier = Modifier.size(20.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("MESSAGGIO VELOCE AL MEDICO", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    }
                                 }
                             }
                         } else {

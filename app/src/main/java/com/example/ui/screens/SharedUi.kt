@@ -93,22 +93,30 @@ fun DisclaimerDialog(onAccept: () -> Unit) {
                     fontWeight = FontWeight.Medium
                 )
 
-                TextButton(
-                    onClick = { showFullManual = true },
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    Text("CONSULTA IL MANUALE COMPLETO", color = GreenPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                }
+
             }
         },
         confirmButton = {
-            Button(
-                onClick = onAccept,
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                shape = RoundedCornerShape(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("ACCETTO E PROSEGUO", color = White, fontWeight = FontWeight.Bold)
+                Button(
+                    onClick = { showFullManual = true },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Manuale", color = White, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = onAccept,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Ho capito", color = White, fontWeight = FontWeight.Bold)
+                }
             }
         },
         shape = RoundedCornerShape(20.dp),
@@ -139,7 +147,7 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
                     "richiesta" -> {
                         HelpItem("Scegli il paziente tramite la barra azzurra in alto (se ne gestisci più di uno).")
                         HelpItem("Seleziona i farmaci cliccando sul loro nome e regola il numero delle scatole con + e -.")
-                        HelpItem("Premi 'Invia al Medico' per trasmettere l'ordine dei farmaci selezionati.")
+                        HelpItem("Premi 'Invia richiesta al Medico' per trasmettere l'ordine dei farmaci selezionati.")
                         HelpItem("In caso di necessità puoi utilizzare \"Messaggio veloce al Medico\" per comunicazioni extra: \"Ho la febbre...\".")
                         HelpItem("Se desideri sostenere il progetto, clicca sull'icona ☕ in alto a destra.")
                     }
@@ -163,14 +171,24 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
         confirmButton = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = { showFullManual = true }) {
-                    Text("MANUALE", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                Button(
+                    onClick = { showFullManual = true },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Manuale", color = White, fontWeight = FontWeight.Bold)
                 }
-                TextButton(onClick = onDismiss) {
-                    Text("Ho capito", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Ho capito", color = White, fontWeight = FontWeight.Bold)
                 }
             }
         },
@@ -228,22 +246,30 @@ fun OnboardingDialog(onDismiss: () -> Unit) {
                     lineHeight = 16.sp
                 )
 
-                TextButton(
-                    onClick = { showFullManual = true },
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    Text("CONSULTA IL MANUALE COMPLETO", color = GreenPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                }
+
             }
         },
         confirmButton = {
-            Button(
-                onClick = onDismiss,
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                shape = RoundedCornerShape(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("ACCETTO E INIZIAMO", color = White, fontWeight = FontWeight.Bold)
+                Button(
+                    onClick = { showFullManual = true },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Manuale", color = White, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Ho capito", color = White, fontWeight = FontWeight.Bold)
+                }
             }
         },
         shape = RoundedCornerShape(20.dp),
@@ -397,25 +423,32 @@ fun ManualContentDialog(onDismiss: () -> Unit) {
                 )
 
                 ManualSection(
-                    title = "3 - CONFIGURAZIONE E FARMACI",
+                    title = "3 - GARANZIE E DISPONIBILITÀ",
+                    content = "L’applicazione viene fornita 'così com’è' e 'in base alla disponibilità', senza garanzie di alcun tipo, esplicite o implicite, incluse, a titolo esemplificativo, garanzie di commerciabilità o idoneità a uno scopo specifico.",
+                    icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
+                    isWarning = true
+                )
+
+                ManualSection(
+                    title = "4 - CONFIGURAZIONE E FARMACI",
                     content = "Gestisci i profili col tasto (+). Inserisci i dati di Paziente e Medico (tasto 'SCEGLI'). Aggiungi i farmaci impostando scatole e orari (giorni o ore). Salva sempre se il tasto diventa ROSSO.",
                     icon = { Icon(Icons.Default.Settings, null, tint = GreenPrimary) }
                 )
 
                 ManualSection(
-                    title = "4 - RICHIESTA E CRONOLOGIA",
+                    title = "5 - RICHIESTA E CRONOLOGIA",
                     content = "Seleziona i farmaci e invia l'ordine al medico. Puoi usare il 'Messaggio Veloce' per avvisi rapidi. Tutte le richieste inviate sono consultabili nella scheda 'Cronologia'.",
                     icon = { Icon(Icons.AutoMirrored.Filled.Send, null, tint = GreenPrimary) }
                 )
 
                 ManualSection(
-                    title = "5 - SOSTIENI IL PROGETTO",
+                    title = "6 - SOSTIENI IL PROGETTO",
                     content = "Clicca sull'icona della tazzina (☕) per sostenere lo sviluppo con un piccolo contributo tramite PayPal (massimo 2 volte). Ti ringraziamo immensamente per il tuo supporto!",
                     icon = { Text("☕", fontSize = 20.sp) }
                 )
 
                 ManualSection(
-                    title = "6 - NON RICEVI LE NOTIFICHE?",
+                    title = "7 - NON RICEVI LE NOTIFICHE?",
                     content = "Se l'app non invia notifiche o sono silenziose, segui questi passaggi:\n\n" +
                             "• APRI IMPOSTAZIONI: Tieni premuta l'icona dell'app per due secondi e tocca il simbolo ( i ) o 'Informazioni app'.\n\n" +
                             "• ATTIVA RICEZIONE: Tocca 'Notifiche' e assicurati che 'Consenti notifiche' sia acceso.\n\n" +
@@ -425,14 +458,14 @@ fun ManualContentDialog(onDismiss: () -> Unit) {
                 )
                 
                 ManualSection(
-                    title = "7 - RESPONSABILITÀ (DISCLAIMER)",
+                    title = "8 - RESPONSABILITÀ (DISCLAIMER)",
                     content = "L'app ha scopo logistico e non sostituisce il medico. Lo sviluppatore non risponde di mancati invii o errori. L'utente è tenuto a verificare sempre l'effettivo recapito delle richieste.",
                     icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
                     isWarning = true
                 )
 
                 ManualSection(
-                    title = "8 - SE L'APP TI È PIACIUTA",
+                    title = "9 - SE L'APP TI È PIACIUTA",
                     content = "Grazie per aver usato l'app! Se ti è stata utile, consigliala a parenti ed amici.",
                     icon = { Icon(Icons.Default.Info, null, tint = GreenPrimary) }
                 )

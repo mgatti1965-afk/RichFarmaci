@@ -309,14 +309,24 @@ fun MedicationEditorDialog(
             confirmButton = {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = { showFullManual = true }) {
-                        Text("MANUALE", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = { showFullManual = true },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Manuale", color = White, fontWeight = FontWeight.Bold)
                     }
-                    TextButton(onClick = { showHelpDialog = false }) {
-                        Text("Ho capito", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = { showHelpDialog = false },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Ho capito", color = White, fontWeight = FontWeight.Bold)
                     }
                 }
             },

@@ -94,7 +94,7 @@ In un secondo momento è possibile mettere in **"Pausa"** eventuali farmaci mome
 Dopo aver impostato la Configurazione, è possibile procedere con la richiesta dei farmaci. Per ogni paziente viene proposto l'elenco dei farmaci attivi (non in pausa).
 1. Attivando il check sarà possibile variare il numero di scatole standard da ordinare.
 2. Seleziona i farmaci cliccando sul nome e adegua il numero di scatole con + e -.
-3. Simultaneamente apparirà il tasto **"Invia al Medico"**.
+3. Simultaneamente apparirà il tasto **"Invia richiesta al Medico"**.
 
 Terminata la scelta dei farmaci sarà possibile procedere con l'invio del messaggio al medico.
 
