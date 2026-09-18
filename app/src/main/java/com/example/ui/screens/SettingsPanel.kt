@@ -127,18 +127,6 @@ fun SettingsPanelContent(
         nDesc != settings.descrizioneNotifica
     }
 
-    // Animazione per il bordo rosso pulsante
-    val infiniteTransition = rememberInfiniteTransition(label = "pulsingBorder")
-    val borderAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "borderAlpha"
-    )
-
     BackHandler(enabled = hasChanges) {
         if (exitAttempted) {
             onClose()
@@ -283,8 +271,8 @@ fun SettingsPanelContent(
                         .then(
                             if (hasChanges) Modifier
                                 .border(
-                                    width = 3.dp,
-                                    color = Color.Red.copy(alpha = borderAlpha),
+                                    width = 2.dp,
+                                    color = Color.Red.copy(alpha = 0.5f),
                                     shape = RoundedCornerShape(16.dp)
                                 )
                                 .padding(12.dp)
@@ -296,7 +284,7 @@ fun SettingsPanelContent(
                     
                     OutlinedTextField(
                         value = pNome,
-                        onValueChange = { pNome = it.capitalizeWords() },
+                        onValueChange = { pNome = it },
                         label = { Text("Nome e Cognome Paziente (*)") },
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -345,7 +333,7 @@ fun SettingsPanelContent(
                         }
                     }
 
-                    OutlinedTextField(value = mNome, onValueChange = { mNome = it.capitalizeWords() }, label = { Text("Nome Medico (*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp))
+                    OutlinedTextField(value = mNome, onValueChange = { mNome = it }, label = { Text("Nome Medico (*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp))
                     OutlinedTextField(value = mTel, onValueChange = { mTel = it }, label = { Text("Cellulare Medico (o Email*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp))
                     OutlinedTextField(value = mEmail, onValueChange = { mEmail = it }, label = { Text("Email Medico (o Cellulare*)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp))
                     OutlinedTextField(value = secInd, onValueChange = { secInd = it }, label = { Text("Ulteriori note (Opzionale)") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GreenPrimary, unfocusedBorderColor = GrayBorder, focusedLabelColor = GreenPrimary, unfocusedLabelColor = Slate600, unfocusedContainerColor = White, focusedContainerColor = White, focusedTextColor = Slate900, unfocusedTextColor = Slate900), shape = RoundedCornerShape(12.dp))
@@ -406,7 +394,7 @@ fun SettingsPanelContent(
                         if (nAttive) {
                             OutlinedTextField(
                                 value = nDesc,
-                                onValueChange = { nDesc = it.capitalizeWords() },
+                                onValueChange = { nDesc = it },
                                 label = { Text("Descrizione Notifica") },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -532,7 +520,7 @@ fun SettingsPanelContent(
             text = {
                 OutlinedTextField(
                     value = newProfileName,
-                    onValueChange = { newProfileName = it.capitalizeWords() },
+                    onValueChange = { newProfileName = it },
                     label = { Text("Nome Paziente") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
