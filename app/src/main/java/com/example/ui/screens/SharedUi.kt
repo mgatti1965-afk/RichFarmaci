@@ -37,6 +37,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.example.R
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import com.example.data.model.Profile
 import com.example.ui.theme.*
 
@@ -58,7 +62,7 @@ fun DisclaimerDialog(onAccept: () -> Unit) {
     }
 
     if (showFullManual) {
-        ManualContentDialog(onDismiss = { showFullManual = false })
+        ManualDialog(onDismiss = { showFullManual = false })
     }
 
     AlertDialog(
@@ -129,7 +133,7 @@ fun HelpDialog(type: String, onDismiss: () -> Unit) {
     var showFullManual by remember { mutableStateOf(false) }
 
     if (showFullManual) {
-        ManualContentDialog(onDismiss = { showFullManual = false })
+        ManualDialog(onDismiss = { showFullManual = false })
     }
 
     AlertDialog(
@@ -202,7 +206,7 @@ fun OnboardingDialog(onDismiss: () -> Unit) {
     var showFullManual by remember { mutableStateOf(false) }
 
     if (showFullManual) {
-        ManualContentDialog(onDismiss = { showFullManual = false })
+        ManualDialog(onDismiss = { showFullManual = false })
     }
 
     AlertDialog(
@@ -390,123 +394,6 @@ fun HelpItem(text: String) {
     }
 }
 
-@Composable
-fun ManualContentDialog(onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                PharmacyCross(modifier = Modifier.size(24.dp))
-                Spacer(modifier = Modifier.width(12.dp))
-                Text("Manuale Utente RichFarmaci", fontWeight = FontWeight.ExtraBold, color = Slate900, fontSize = 22.sp)
-            }
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .heightIn(max = 500.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                ManualSection(
-                    title = "1 - GUIDA ALL'INSTALLAZIONE (APK)",
-                    content = "Se ricevuto via WhatsApp: clicca sul file e autorizza 'Sorgenti sconosciute'. Se via Email: scarica l'allegato e clicca sulla notifica di download completato. In caso di blocco Play Protect, seleziona 'Installa comunque'.",
-                    icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
-                    isWarning = true
-                )
-
-                ManualSection(
-                    title = "2 - AVVISI DI SICUREZZA E PERMESSI",
-                    content = "Autorizza sempre le notifiche al primo avvio per ricevere i promemoria. L'app è sicura, ma essendo esterna al Play Store richiede la conferma manuale dell'utente durante l'installazione.",
-                    icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
-                    isWarning = true
-                )
-
-                ManualSection(
-                    title = "3 - GARANZIE E DISPONIBILITÀ",
-                    content = "L’applicazione viene fornita 'così com’è' e 'in base alla disponibilità', senza garanzie di alcun tipo, esplicite o implicite, incluse, a titolo esemplificativo, garanzie di commerciabilità o idoneità a uno scopo specifico.",
-                    icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
-                    isWarning = true
-                )
-
-                ManualSection(
-                    title = "4 - CONFIGURAZIONE E FARMACI",
-                    content = "Gestisci i profili col tasto (+). Inserisci i dati di Paziente e Medico (tasto 'SCEGLI'). Aggiungi i farmaci impostando scatole e orari (giorni o ore). Salva sempre se il tasto diventa ROSSO.",
-                    icon = { Icon(Icons.Default.Settings, null, tint = GreenPrimary) }
-                )
-
-                ManualSection(
-                    title = "5 - RICHIESTA E CRONOLOGIA",
-                    content = "Seleziona i farmaci e invia l'ordine al medico. Puoi usare il 'Messaggio Veloce' per avvisi rapidi. Tutte le richieste inviate sono consultabili nella scheda 'Cronologia'.",
-                    icon = { Icon(Icons.AutoMirrored.Filled.Send, null, tint = GreenPrimary) }
-                )
-
-                ManualSection(
-                    title = "6 - SOSTIENI IL PROGETTO",
-                    content = "Clicca sull'icona della tazzina (☕) per sostenere lo sviluppo con un piccolo contributo tramite PayPal (massimo 2 volte). Ti ringraziamo immensamente per il tuo supporto!",
-                    icon = { Text("☕", fontSize = 20.sp) }
-                )
-
-                ManualSection(
-                    title = "7 - NON RICEVI LE NOTIFICHE?",
-                    content = "Se l'app non invia notifiche o sono silenziose, segui questi passaggi:\n\n" +
-                            "• APRI IMPOSTAZIONI: Tieni premuta l'icona dell'app per due secondi e tocca il simbolo ( i ) o 'Informazioni app'.\n\n" +
-                            "• ATTIVA RICEZIONE: Tocca 'Notifiche' e assicurati che 'Consenti notifiche' sia acceso.\n\n" +
-                            "• ATTIVA SUONI E VIBRAZIONE: Verifica che non sia su 'Silenzioso'. Tocca 'Categorie di notifica' e per ogni voce (Avvisi, Messaggi) attiva Suono e Vibrazione.",
-                    icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
-                    isWarning = true
-                )
-                
-                ManualSection(
-                    title = "8 - RESPONSABILITÀ (DISCLAIMER)",
-                    content = "L'app ha scopo logistico e non sostituisce il medico. Lo sviluppatore non risponde di mancati invii o errori. L'utente è tenuto a verificare sempre l'effettivo recapito delle richieste.",
-                    icon = { Icon(Icons.Default.Info, null, tint = Color.Red.copy(alpha = 0.7f)) },
-                    isWarning = true
-                )
-
-                ManualSection(
-                    title = "9 - SE L'APP TI È PIACIUTA",
-                    content = "Grazie per aver usato l'app! Se ti è stata utile, consigliala a parenti ed amici.",
-                    icon = { Icon(Icons.Default.Info, null, tint = GreenPrimary) }
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    "Supporto tecnico: mgatt1965@gmail.com",
-                    fontSize = 11.sp,
-                    color = Slate600,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("CHIUDI MANUALE", color = White, fontWeight = FontWeight.Bold)
-            }
-        },
-        shape = RoundedCornerShape(20.dp),
-        containerColor = White
-    )
-}
-
-@Composable
-fun ManualSection(title: String, content: String, icon: @Composable () -> Unit, isWarning: Boolean = false) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            icon()
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(title, fontWeight = FontWeight.Bold, color = if (isWarning) Color.Red.copy(alpha = 0.8f) else GreenPrimary, fontSize = 15.sp)
-        }
-        Text(content, fontSize = 14.sp, color = Slate600, lineHeight = 20.sp)
-        HorizontalDivider(color = GrayBorder.copy(alpha = 0.3f), modifier = Modifier.padding(top = 8.dp))
-    }
-}
 
 @Composable
 fun DonationDialog(
@@ -581,10 +468,3 @@ fun DonationDialog(
     )
 }
 
-@Composable
-fun PharmacyCross(modifier: Modifier = Modifier, color: Color = GreenPrimary) {
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.32f).background(color, RoundedCornerShape(percent = 25)))
-        Box(modifier = Modifier.fillMaxWidth(0.32f).fillMaxHeight().background(color, RoundedCornerShape(percent = 25)))
-    }
-}

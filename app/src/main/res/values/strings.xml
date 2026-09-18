@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">RichFarmaci</string>
+
+    <!-- Manuale Utente -->
+    <string name="btn_view_manual">Manuale Utente</string>
+    <string name="manual_dialog_title">Manuale Utente</string>
+    <string name="btn_close">Chiudi</string>
 </resources>

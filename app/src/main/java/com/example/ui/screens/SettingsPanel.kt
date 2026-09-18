@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material3.*
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -40,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.example.R
 import com.example.data.model.Medication
 import com.example.data.model.PatientSettings
 import com.example.data.model.Profile
@@ -67,6 +70,7 @@ fun SettingsPanelContent(
     var showAddProfileDialog by remember { mutableStateOf(false) }
     var newProfileName by remember { mutableStateOf("") }
     var showHelp by remember { mutableStateOf(false) }
+    var showManualDialog by remember { mutableStateOf(false) }
     var showWarningBanner by remember { mutableStateOf(false) }
 
     LaunchedEffect(showWarningBanner) {
@@ -78,6 +82,10 @@ fun SettingsPanelContent(
 
     if (showHelp) {
         HelpDialog(type = "configurazione", onDismiss = { showHelp = false })
+    }
+
+    if (showManualDialog) {
+        ManualDialog(onDismiss = { showManualDialog = false })
     }
 
     if (showOnboarding) {
@@ -512,6 +520,7 @@ fun SettingsPanelContent(
                     }
                 }
             }
+
             item { Spacer(modifier = Modifier.height(32.dp)) }
         }
     }

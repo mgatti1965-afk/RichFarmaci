@@ -208,7 +208,7 @@ fun MedicationEditorDialog(
     var showFullManual by remember { mutableStateOf(false) }
 
     if (showFullManual) {
-        ManualContentDialog(onDismiss = { showFullManual = false })
+        ManualDialog(onDismiss = { showFullManual = false })
     }
 
     LaunchedEffect(showWarningBanner) {
@@ -385,7 +385,7 @@ fun MedicationEditorDialog(
 
                 OutlinedTextField(
                     value = nome,
-                    onValueChange = { nome = it.uppercase() },
+                    onValueChange = { nome = it },
                     label = { Text("Nome Farmaco") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -398,7 +398,7 @@ fun MedicationEditorDialog(
                         focusedTextColor = Slate900,
                         unfocusedTextColor = Slate900
                     ),
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                     shape = RoundedCornerShape(12.dp)
                 )
 
