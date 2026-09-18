@@ -27,7 +27,7 @@ In alto è presente un tasto **"?"** che consente di accedere a una guida in lin
 
 ---
 
-## Guida all'Installazione (APK)
+## 🔴 Guida all'Installazione (APK)
 
 Poiché l'applicazione viene distribuita direttamente (non tramite il Play Store), la procedura cambia leggermente a seconda di come hai ricevuto il file. Scegli il tuo caso:
 
@@ -45,12 +45,12 @@ Poiché l'applicazione viene distribuita direttamente (non tramite il Play Store
 
 ### Caso C: Download Diretto (Consigliato per: Aggiornamenti)
 Da utilizzare dopo la Prima Installazione (Caso A). Consente di accedere sempre all'ultima versione.
-1. Clicca su questo link dal tuo smartphone: [Scarica APK](https://github.com/mgatti1965-afk/RichFarmaci/releases/latest/download/RichFarmaci-debug.apk)
+1. Clicca su questo link dal tuo smartphone: [Scarica APK](https://github.com/mgatti1965-afk/RichFarmaci/releases/latest/download/RichFarmaci.apk)
 2. Il download partirà automaticamente. Al termine, clicca sul file e procedi come nel Caso A.
 
 ---
 
-## Avvisi di Sicurezza Comuni
+## 🔴 Avvisi di Sicurezza Comuni
 
 Durante l'installazione potresti vedere questi messaggi:
 
@@ -147,12 +147,12 @@ Icona della tazzina di caffè (PayPal). Transazione singola da 5€ per sostener
 
 ---
 
-## 5. Limitazione di Responsabilità
+## 5. 🔴 Limitazione di Responsabilità
 L’applicazione ha scopo puramente gestionale. Lo sviluppatore non risponde di errate totalizzazioni. L'utente è tenuto a verificare sempre gli effettivi importi.
 
 ---
 
-## 6. Segnalazioni e Feedback
+## 6. 🔴 Segnalazioni e Feedback
 L'applicazione è fornita così com'è. Se riscontri problemi o hai suggerimenti, puoi contattarmi tramite:
 
 - **WhatsApp:** https://wa.me/393286449326 (Clicca sul link per aprire la chat di supporto)

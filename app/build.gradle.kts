@@ -69,7 +69,11 @@ android {
   applicationVariants.all {
     outputs.all {
       val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-      output.outputFileName = "RichFarmaci.apk"
+      if (buildType.name == "debug") {
+        output.outputFileName = "RichFarmaci-debug.apk"
+      } else {
+        output.outputFileName = "RichFarmaci.apk"
+      }
     }
   }
 

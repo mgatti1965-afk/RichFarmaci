@@ -75,29 +75,34 @@ fun DisclaimerDialog(onAccept: () -> Unit) {
             }
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 300.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Text(
                     "L’applicazione RichFarmaci ha scopo puramente gestionale e di supporto logistico. Non costituisce un dispositivo medico e non sostituisce in alcun modo il parere, la diagnosi o il consiglio del medico curante.",
-                    fontSize = 14.sp,
-                    color = Slate600
+                    fontSize = 13.sp,
+                    color = Slate600,
+                    lineHeight = 18.sp
                 )
                 Text(
                     "Lo sviluppatore non si assume alcuna responsabilità per:",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     color = Slate900
                 )
-                HelpItem("Errori, ritardi o mancate consegne dei messaggi (WhatsApp, SMS, Email).")
-                HelpItem("Malfunzionamento delle notifiche (dovute a risparmio energetico o sistema operativo).")
-                HelpItem("Errori nei dati (nomi farmaci, dosaggi, CF) inseriti dall'utente.")
+                HelpItem("Errori, ritardi o mancate consegne dei messaggi (WhatsApp, SMS, Email).", fontSize = 13.sp)
+                HelpItem("Malfunzionamento delle notifiche (dovute a risparmio energetico o sistema operativo).", fontSize = 13.sp)
+                HelpItem("Errori nei dati (nomi farmaci, dosaggi, CF) inseriti dall'utente.", fontSize = 13.sp)
                 Text(
-                    "L'utente è tenuto a verificare sempre l'effettivo invio delle richieste. L'uso dell'app avviene sotto la piena e consapevole responsabilità dell'utente.",
-                    fontSize = 14.sp,
+                    "L'utente è tenuto a verificare sempre l'effettivo invio delle richieste. L'uso dell'app avviene sotto la piena e consapevole responsabilità dell'utente e a proprio rischio.",
+                    fontSize = 13.sp,
                     color = Slate600,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    lineHeight = 18.sp
                 )
-
-
             }
         },
         confirmButton = {
@@ -387,10 +392,10 @@ fun ProfileContextSwitcher(
 }
 
 @Composable
-fun HelpItem(text: String) {
+fun HelpItem(text: String, fontSize: androidx.compose.ui.unit.TextUnit = 15.sp) {
     Row(verticalAlignment = Alignment.Top, modifier = Modifier.fillMaxWidth()) {
-        Text("• ", fontWeight = FontWeight.Bold, color = GreenPrimary, fontSize = 18.sp)
-        Text(text = text, fontSize = 15.sp, color = Slate600)
+        Text("• ", fontWeight = FontWeight.Bold, color = GreenPrimary, fontSize = (fontSize.value + 3).sp)
+        Text(text = text, fontSize = fontSize, color = Slate600)
     }
 }
 
