@@ -61,17 +61,17 @@ fun NotificationPreview(
             
             if (nextTime <= now) {
                 if (frequenzaValore > 0) {
+                    val diff = now - nextTime
                     if (frequenzaTipo == "ORE") {
-                        while (nextTime <= now) {
-                            calendar.add(Calendar.HOUR_OF_DAY, frequenzaValore)
-                            nextTime = calendar.timeInMillis
-                        }
+                        val millisInFreq = frequenzaValore.toLong() * 3600 * 1000
+                        val steps = (diff / millisInFreq) + 1
+                        calendar.add(Calendar.HOUR_OF_DAY, (steps * frequenzaValore).toInt())
                     } else {
-                        while (nextTime <= now) {
-                            calendar.add(Calendar.DAY_OF_YEAR, frequenzaValore)
-                            nextTime = calendar.timeInMillis
-                        }
+                        val millisInFreq = frequenzaValore.toLong() * 24 * 3600 * 1000
+                        val steps = (diff / millisInFreq) + 1
+                        calendar.add(Calendar.DAY_OF_YEAR, (steps * frequenzaValore).toInt())
                     }
+                    nextTime = calendar.timeInMillis
                 }
                 // Se frequenzaValore == 0 e l'orario è passato, rimarrà nel passato
             }
@@ -218,17 +218,19 @@ fun MedicationEditorDialog(
         }
     }
 
-    val hasChanges = remember(medication, nome, scatole, note, notificaAttiva, orarioNotifica, frequenzaValore, frequenzaTipo) {
-        if (medication == null) {
-            nome.isNotBlank() || scatole != 1 || note.isNotBlank() || notificaAttiva || orarioNotifica != "08:00" || frequenzaValore != 1 || frequenzaTipo != "GIORNI"
-        } else {
-            nome != medication.nome ||
-                    scatole != medication.scatole ||
-                    note != medication.note ||
-                    notificaAttiva != medication.notificaAttiva ||
-                    orarioNotifica != medication.orarioNotifica ||
-                    frequenzaValore != medication.frequenzaValore ||
-                    frequenzaTipo != medication.frequenzaTipo
+    val hasChanges by remember(medication, nome, scatole, note, notificaAttiva, orarioNotifica, frequenzaValore, frequenzaTipo) {
+        derivedStateOf {
+            if (medication == null) {
+                nome.isNotBlank() || scatole != 1 || note.isNotBlank() || notificaAttiva || orarioNotifica != "08:00" || frequenzaValore != 1 || frequenzaTipo != "GIORNI"
+            } else {
+                nome != medication.nome ||
+                        scatole != medication.scatole ||
+                        note != medication.note ||
+                        notificaAttiva != medication.notificaAttiva ||
+                        orarioNotifica != medication.orarioNotifica ||
+                        frequenzaValore != medication.frequenzaValore ||
+                        frequenzaTipo != medication.frequenzaTipo
+            }
         }
     }
 

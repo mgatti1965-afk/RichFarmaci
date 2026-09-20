@@ -54,8 +54,21 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
     val haptic = LocalHapticFeedback.current
     var isExiting by remember { mutableStateOf(false) }
 
-    // Intercetta l'uscita e mostra la schermata di saluto
-    BackHandler(enabled = !isExiting) {
+    val settings by viewModel.settings.collectAsState()
+    val medications by viewModel.medications.collectAsState()
+    val selectedIds by viewModel.selectedMedicationIds.collectAsState()
+    val selectedQuantities by viewModel.selectedQuantities.collectAsState()
+    val currentTab by viewModel.currentTab.collectAsState()
+    val sentRequests by viewModel.sentRequests.collectAsState()
+    val profiles by viewModel.profiles.collectAsState()
+    val activeProfile by viewModel.activeProfile.collectAsState()
+    val showSettings by viewModel.showSettings.collectAsState()
+    val donationCount by viewModel.donationCount.collectAsState()
+    val onboardingShown by viewModel.onboardingShown.collectAsState()
+    val disclaimerAccepted by viewModel.disclaimerAccepted.collectAsState()
+
+    // Intercetta l'uscita solo se il disclaimer è stato accettato e non stiamo già uscendo
+    BackHandler(enabled = disclaimerAccepted && !isExiting) {
         isExiting = true
     }
 
@@ -72,20 +85,28 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
                 currentContext = currentContext.baseContext
             }
         }
+        
+        // Visualizza una schermata di saluto durante l'uscita
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color.White),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    "Grazie per aver usato RichFarmaci",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Slate900
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "A presto!",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Slate600
+                )
+            }
+        }
+        return
     }
-
-    val settings by viewModel.settings.collectAsState()
-    val medications by viewModel.medications.collectAsState()
-    val selectedIds by viewModel.selectedMedicationIds.collectAsState()
-    val selectedQuantities by viewModel.selectedQuantities.collectAsState()
-    val currentTab by viewModel.currentTab.collectAsState()
-    val sentRequests by viewModel.sentRequests.collectAsState()
-    val profiles by viewModel.profiles.collectAsState()
-    val activeProfile by viewModel.activeProfile.collectAsState()
-    val showSettings by viewModel.showSettings.collectAsState()
-    val donationCount by viewModel.donationCount.collectAsState()
-    val onboardingShown by viewModel.onboardingShown.collectAsState()
-    val disclaimerAccepted by viewModel.disclaimerAccepted.collectAsState()
     var showAddProfileDialog by remember { mutableStateOf(false) }
     var newProfileName by remember { mutableStateOf("") }
     var helpType by remember { mutableStateOf<String?>(null) }

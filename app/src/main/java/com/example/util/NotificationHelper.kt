@@ -59,22 +59,17 @@ object NotificationHelper {
             // Se l'orario base è passato, cerchiamo la prossima ripetizione oggi o domani/futuro
             if (scheduleTime <= currentTime) {
                 if (medication.frequenzaValore > 0) {
+                    val diff = currentTime - scheduleTime
                     if (medication.frequenzaTipo == "ORE") {
-                        // Calcoliamo quante ripetizioni servono per arrivare al futuro (in ore)
-                        while (scheduleTime <= currentTime) {
-                            calendar.add(Calendar.HOUR_OF_DAY, medication.frequenzaValore)
-                            scheduleTime = calendar.timeInMillis
-                        }
+                        val millisInFreq = medication.frequenzaValore.toLong() * 3600 * 1000
+                        val steps = (diff / millisInFreq) + 1
+                        calendar.add(Calendar.HOUR_OF_DAY, (steps * medication.frequenzaValore).toInt())
                     } else {
-                        // Calcoliamo quante ripetizioni servono per arrivare al futuro (in giorni)
-                        while (scheduleTime <= currentTime) {
-                            calendar.add(Calendar.DAY_OF_YEAR, medication.frequenzaValore)
-                            scheduleTime = calendar.timeInMillis
-                        }
+                        val millisInFreq = medication.frequenzaValore.toLong() * 24 * 3600 * 1000
+                        val steps = (diff / millisInFreq) + 1
+                        calendar.add(Calendar.DAY_OF_YEAR, (steps * medication.frequenzaValore).toInt())
                     }
-                } else {
-                    // Nessuna ripetizione: se l'orario è passato, non facciamo nulla.
-                    // L'orario rimarrà nel passato e non verrà considerato per la schedulazione.
+                    scheduleTime = calendar.timeInMillis
                 }
             }
             

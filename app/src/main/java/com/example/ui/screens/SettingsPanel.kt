@@ -113,18 +113,20 @@ fun SettingsPanelContent(
     val profileId by viewModel.activeProfileId.collectAsState()
     val isNewProfile = profileId == null
 
-    val hasChanges = remember(pNome, pCf, mNome, mTel, mEmail, secInd, msgTesta, msgCoda, valType, nAttive, nDesc, settings) {
-        pNome != settings.pazienteNome ||
-        pCf != settings.pazienteCf ||
-        mNome != settings.medicoNome ||
-        mTel != settings.medicoTelefono ||
-        mEmail != settings.medicoEmail ||
-        secInd != settings.secondoIndirizzo ||
-        msgTesta != settings.messaggioTesta ||
-        msgCoda != settings.messaggioCoda ||
-        valType != settings.tipoInvio ||
-        nAttive != settings.notificheAttive ||
-        nDesc != settings.descrizioneNotifica
+    val hasChanges by remember(pNome, pCf, mNome, mTel, mEmail, secInd, msgTesta, msgCoda, valType, nAttive, nDesc, settings) {
+        derivedStateOf {
+            pNome != settings.pazienteNome ||
+            pCf != settings.pazienteCf ||
+            mNome != settings.medicoNome ||
+            mTel != settings.medicoTelefono ||
+            mEmail != settings.medicoEmail ||
+            secInd != settings.secondoIndirizzo ||
+            msgTesta != settings.messaggioTesta ||
+            msgCoda != settings.messaggioCoda ||
+            valType != settings.tipoInvio ||
+            nAttive != settings.notificheAttive ||
+            nDesc != settings.descrizioneNotifica
+        }
     }
 
     BackHandler(enabled = hasChanges) {
@@ -268,16 +270,7 @@ fun SettingsPanelContent(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .then(
-                            if (hasChanges) Modifier
-                                .border(
-                                    width = 2.dp,
-                                    color = Color.Red.copy(alpha = 0.5f),
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-                                .padding(12.dp)
-                            else Modifier
-                        ),
+                        .padding(if (hasChanges) 12.dp else 0.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(text = "1. Anagrafica Paziente e Medico", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Slate900)

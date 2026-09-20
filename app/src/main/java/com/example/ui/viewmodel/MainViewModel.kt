@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -152,8 +153,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _onboardingShown.value = true
             }
 
-            // Select first profile on startup
-            val currentProfiles = db.profileDao().getAllProfilesSnapshot()
+            // Select first profile on startup - Eseguito su IO per non bloccare
+            val currentProfiles = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                db.profileDao().getAllProfilesSnapshot()
+            }
+            
             if (currentProfiles.isNotEmpty()) {
                 selectProfile(currentProfiles.first().id)
             } else {
@@ -165,7 +169,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private suspend fun migrateFromSharedPreferencesIfNeeded() {
-        val currentProfiles = db.profileDao().getAllProfilesSnapshot()
+        val currentProfiles = kotlinx.coroutines.withContext(Dispatchers.IO) {
+            db.profileDao().getAllProfilesSnapshot()
+        }
         if (currentProfiles.isEmpty() && settingsManager.isConfigured()) {
             val legacySettings = settingsManager.getSettings()
             val newProfile = Profile(
@@ -214,7 +220,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _showSettings.value = show
         if (!show && _activeProfileId.value == null) {
             viewModelScope.launch {
-                val currentProfiles = db.profileDao().getAllProfilesSnapshot()
+                val currentProfiles = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                    db.profileDao().getAllProfilesSnapshot()
+                }
                 if (currentProfiles.isNotEmpty()) {
                     selectProfile(currentProfiles.first().id)
                 } else {
@@ -335,66 +343,69 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Save profile configurations
     fun savePatientSettings(newSettings: PatientSettings) {
         viewModelScope.launch {
-            var profileToProcess = _activeProfile.value
-            
-            if (profileToProcess == null) {
-                // Se non c'è un profilo attivo (es. primo avvio), lo creiamo
-                val newProfile = Profile(
-                    pazienteNome = newSettings.pazienteNome,
-                    pazienteCf = newSettings.pazienteCf,
-                    medicoNome = newSettings.medicoNome,
-                    medicoTelefono = newSettings.medicoTelefono,
-                    medicoEmail = newSettings.medicoEmail,
-                    secondoIndirizzo = newSettings.secondoIndirizzo,
-                    messaggioTesta = newSettings.messaggioTesta,
-                    messaggioCoda = newSettings.messaggioCoda,
-                    tipoInvio = newSettings.tipoInvio,
-                    notificheAttive = newSettings.notificheAttive,
-                    descrizioneNotifica = newSettings.descrizioneNotifica
-                )
-                profileRepository.insertProfile(newProfile)
-                _activeProfileId.value = newProfile.id
-                _activeProfile.value = newProfile
-                settingsManager.setActiveProfileId(newProfile.id)
-                profileToProcess = newProfile
-            } else {
-                // Aggiorniamo il profilo esistente
-                val updatedProfile = profileToProcess.copy(
-                    pazienteNome = newSettings.pazienteNome,
-                    pazienteCf = newSettings.pazienteCf,
-                    medicoNome = newSettings.medicoNome,
-                    medicoTelefono = newSettings.medicoTelefono,
-                    medicoEmail = newSettings.medicoEmail,
-                    secondoIndirizzo = newSettings.secondoIndirizzo,
-                    messaggioTesta = newSettings.messaggioTesta,
-                    messaggioCoda = newSettings.messaggioCoda,
-                    tipoInvio = newSettings.tipoInvio,
-                    notificheAttive = newSettings.notificheAttive,
-                    descrizioneNotifica = newSettings.descrizioneNotifica
-                )
-                profileRepository.updateProfile(updatedProfile)
-                _activeProfile.value = updatedProfile
-                profileToProcess = updatedProfile
+            val profileToProcess = withContext(Dispatchers.IO) {
+                var currentProfile = _activeProfile.value
+                
+                if (currentProfile == null) {
+                    val newProfile = Profile(
+                        pazienteNome = newSettings.pazienteNome,
+                        pazienteCf = newSettings.pazienteCf,
+                        medicoNome = newSettings.medicoNome,
+                        medicoTelefono = newSettings.medicoTelefono,
+                        medicoEmail = newSettings.medicoEmail,
+                        secondoIndirizzo = newSettings.secondoIndirizzo,
+                        messaggioTesta = newSettings.messaggioTesta,
+                        messaggioCoda = newSettings.messaggioCoda,
+                        tipoInvio = newSettings.tipoInvio,
+                        notificheAttive = newSettings.notificheAttive,
+                        descrizioneNotifica = newSettings.descrizioneNotifica
+                    )
+                    profileRepository.insertProfile(newProfile)
+                    currentProfile = newProfile
+                } else {
+                    val updatedProfile = currentProfile.copy(
+                        pazienteNome = newSettings.pazienteNome,
+                        pazienteCf = newSettings.pazienteCf,
+                        medicoNome = newSettings.medicoNome,
+                        medicoTelefono = newSettings.medicoTelefono,
+                        medicoEmail = newSettings.medicoEmail,
+                        secondoIndirizzo = newSettings.secondoIndirizzo,
+                        messaggioTesta = newSettings.messaggioTesta,
+                        messaggioCoda = newSettings.messaggioCoda,
+                        tipoInvio = newSettings.tipoInvio,
+                        notificheAttive = newSettings.notificheAttive,
+                        descrizioneNotifica = newSettings.descrizioneNotifica
+                    )
+                    profileRepository.updateProfile(updatedProfile)
+                    currentProfile = updatedProfile
+                }
+                currentProfile
             }
+
+            _activeProfileId.value = profileToProcess.id
+            _activeProfile.value = profileToProcess
+            settingsManager.setActiveProfileId(profileToProcess.id)
 
             updateConfigStatus()
 
-            // Aggiorna la schedulazione delle notifiche
-            val currentMedications = medicationRepository.getMedicationsSnapshotByProfile(profileToProcess.id)
-            com.example.util.NotificationHelper.updateAllNotifications(
-                getApplication(),
-                currentMedications,
-                newSettings.notificheAttive,
-                newSettings.descrizioneNotifica
-            )
+            // Aggiorna la schedulazione delle notifiche su IO
+            withContext(Dispatchers.IO) {
+                val currentMedications = medicationRepository.getMedicationsSnapshotByProfile(profileToProcess.id)
+                com.example.util.NotificationHelper.updateAllNotifications(
+                    getApplication(),
+                    currentMedications,
+                    newSettings.notificheAttive,
+                    newSettings.descrizioneNotifica
+                )
 
-            // Controllo Codice Fiscale Speciale per pre-popolamento rubrica
-            val cfClean = newSettings.pazienteCf.replace(" ", "").uppercase()
-            if (cfClean == "CLLRNN40M59L957V") {
-                val medsInDb = medicationRepository.getMedicationsSnapshotByProfile(profileToProcess.id)
-                if (medsInDb.isEmpty()) {
-                    android.util.Log.d("RichFarmaci", "CF Speciale rilevato: inserimento farmaci predefiniti")
-                    medicationRepository.forcePrepopulateWithDefaults(profileToProcess.id)
+                // Controllo Codice Fiscale Speciale per pre-popolamento rubrica
+                val cfClean = newSettings.pazienteCf.replace(" ", "").uppercase()
+                if (cfClean == "CLLRNN40M59L957V") {
+                    val medsInDb = medicationRepository.getMedicationsSnapshotByProfile(profileToProcess.id)
+                    if (medsInDb.isEmpty()) {
+                        android.util.Log.d("RichFarmaci", "CF Speciale rilevato: inserimento farmaci predefiniti")
+                        medicationRepository.forcePrepopulateWithDefaults(profileToProcess.id)
+                    }
                 }
             }
         }
