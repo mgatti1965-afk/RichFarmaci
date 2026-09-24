@@ -45,7 +45,7 @@ Poiché l'applicazione viene distribuita direttamente (non tramite il Play Store
 
 ### Caso C: Download Diretto (Consigliato per: Aggiornamenti)
 Da utilizzare dopo la Prima Installazione (Caso A). Consente di accedere sempre all'ultima versione.
-1. Clicca su questo link dal tuo smartphone: [Scarica APK](https://github.com/mgatti1965-afk/RichFarmaci/releases/latest/download/RichFarmaci.apk)
+1. Clicca su questo link dal tuo smartphone: [Scarica APK](https://github.com/mgatti1965-afk/RichFarmaci/releases/download/Ver.1.0/RichFarmaci.apk)
 2. Il download partirà automaticamente. Al termine, clicca sul file e procedi come nel Caso A.
 
 ---
