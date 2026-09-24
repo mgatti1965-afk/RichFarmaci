@@ -33,32 +33,26 @@ android {
   }
 
   signingConfigs {
-    val localProperties = Properties()
-    val localPropertiesFile = rootProject.file("local.properties")
-    if (localPropertiesFile.exists()) {
-      localProperties.load(localPropertiesFile.inputStream())
-    }
-
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      storeFile = file(keystorePath)
-      storePassword = localProperties.getProperty("signing.storePassword") ?: System.getenv("STORE_PASSWORD")
-      keyAlias = localProperties.getProperty("signing.keyAlias") ?: "upload"
-      keyPassword = localProperties.getProperty("signing.keyPassword") ?: System.getenv("KEY_PASSWORD")
-    }
-    create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+      val keystoreFile = rootProject.file("my-upload-key.jks")
+      val localProperties = Properties()
+      val localPropertiesFile = rootProject.file("local.properties")
+      if (localPropertiesFile.exists()) {
+        localProperties.load(localPropertiesFile.inputStream())
+      }
+
+      storeFile = if (keystoreFile.exists()) keystoreFile else file("${rootDir}/debug.keystore")
+      storePassword = localProperties.getProperty("signing.storePassword") ?: "android"
+      keyAlias = localProperties.getProperty("signing.keyAlias") ?: "androiddebugkey"
+      keyPassword = localProperties.getProperty("signing.keyPassword") ?: "android"
     }
   }
 
   buildTypes {
     release {
       isCrunchPngs = true
-      isMinifyEnabled = true
-      isShrinkResources = true
+      isMinifyEnabled = false
+      isShrinkResources = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
