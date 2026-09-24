@@ -20,6 +20,11 @@ Poiché l'applicazione viene distribuita direttamente (non tramite il Play Store
 3. Se non trovi la notifica, apri l'app **"Download"** o **"File"** (o "Archivio") che trovi tra le tue applicazioni e cerca il file nella cartella "Download".
 4. Procedi con l'installazione autorizzando le "origini sconosciute" se richiesto (come al punto 3 del Caso A).
 
+### Caso C: Aggiornamento da Indirizzo (Consigliato per: Aggiornamenti)
+Da utilizzare dopo la Prima Installazione (Caso A). Consente di accedere sempre all'ultima versione.
+1. Clicca su questo link dal tuo smartphone: [Scarica APK](https://github.com/mgatti1965-afk/RichFarmaci/releases/latest/download/RichFarmaci.apk)
+2. Il download partirà automaticamente. Al termine, clicca sul file e procedi come nel Caso A.
+
 ---
 
 ## 2 - 🔴 Avvisi di Sicurezza Comuni
