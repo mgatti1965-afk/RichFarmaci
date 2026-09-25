@@ -97,6 +97,18 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
     var isTestMode by remember { mutableStateOf(false) }
     var showQuickMessageDialog by remember { mutableStateOf(false) }
     var quickMessageText by remember { mutableStateOf("") }
+    
+    val backupStatus by viewModel.backupStatus.collectAsState()
+    val showAutoRestorePrompt by viewModel.showAutoRestorePrompt.collectAsState()
+    var showBackupRestoreDialog by remember { mutableStateOf(false) }
+
+    // Effetto per chiudere automaticamente il dialogo in caso di successo senza errori
+    LaunchedEffect(backupStatus) {
+        if (backupStatus == "RIPRISTINO_OK") {
+            showBackupRestoreDialog = false
+            viewModel.clearBackupStatus()
+        }
+    }
 
     if (!disclaimerAccepted) {
         DisclaimerDialog(onAccept = { 
@@ -108,6 +120,34 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
 
     if (!onboardingShown) {
         OnboardingDialog(onDismiss = { viewModel.setOnboardingShown(true) })
+        return // Blocca la sequenza finché l'onboarding non viene superato
+    }
+
+    if (showAutoRestorePrompt) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissAutoRestorePrompt() },
+            title = { Text("Ripristino Dati Rilevato", fontWeight = FontWeight.Bold, color = Slate900) },
+            text = {
+                Text(
+                    "È stato trovato un file di backup nella cartella Download. Vuoi ripristinare i tuoi dati (profili, farmaci e cronologia) ora? Questo ti permetterà di saltare la configurazione iniziale.",
+                    fontSize = 14.sp,
+                    color = Slate600
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmAutoRestore(context) }) {
+                    Text("RIPRISTINA ORA", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissAutoRestorePrompt() }) {
+                    Text("CONFIGURA MANUALMENTE", color = Slate600)
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = White
+        )
+        return // Blocca la sequenza finché non si compie la scelta del ripristino dati
     }
 
     if (showDonationDialog) {
@@ -249,6 +289,64 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
         HelpDialog(type = helpType!!, onDismiss = { helpType = null })
     }
 
+    if (showBackupRestoreDialog || (backupStatus != null && backupStatus != "RIPRISTINO_OK")) {
+        AlertDialog(
+            onDismissRequest = { 
+                showBackupRestoreDialog = false
+                viewModel.clearBackupStatus()
+            },
+            title = { Text("Backup & Ripristino Dati", fontWeight = FontWeight.Bold, color = Slate900) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "Gestisci i profili, farmaci e cronologia salvandoli o ripristinandoli dalla cartella pubblica Download come file 'RichFarmaci_Backup.json'.",
+                        fontSize = 14.sp,
+                        color = Slate600
+                    )
+                    if (backupStatus != null && backupStatus != "RIPRISTINO_OK") {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = GrayBackground),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = backupStatus!!,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (backupStatus!!.startsWith("Errore")) Color.Red else GreenPrimary,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                ) {
+                    TextButton(onClick = { viewModel.exportBackup(context) }) {
+                        Text("ESPORTA", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                    }
+                    TextButton(onClick = { viewModel.importBackup(context) }) {
+                        Text("RIPRISTINA", color = Color.Red, fontWeight = FontWeight.Bold)
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showBackupRestoreDialog = false
+                    viewModel.clearBackupStatus()
+                }) {
+                    Text("CHIUDI", color = Slate600)
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = White
+        )
+        return // Blocca il rendering del resto dell'interfaccia durante operazioni di backup/ripristino
+    }
+
     if (viewingRequestText != null) {
         AlertDialog(
             onDismissRequest = { viewingRequestText = null },
@@ -320,9 +418,21 @@ fun MainScreen(viewModel: MainViewModel, onDisclaimerAccepted: () -> Unit) {
                         ) {
                             Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = "Aiuto", tint = Slate600)
                         }
-                        IconButton(
-                            onClick = { viewModel.setShowSettings(true) },
-                            modifier = Modifier.background(GrayBackground, CircleShape)
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(GrayBackground)
+                                .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onTap = { viewModel.setShowSettings(true) },
+                                        onLongPress = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            showBackupRestoreDialog = true
+                                        }
+                                    )
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(Icons.Default.Settings, contentDescription = "Impostazioni", tint = Slate600)
                         }

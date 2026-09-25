@@ -116,6 +116,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _disclaimerAccepted = MutableStateFlow(settingsManager.isDisclaimerAccepted())
     val disclaimerAccepted: StateFlow<Boolean> = _disclaimerAccepted.asStateFlow()
 
+    private val _backupStatus = MutableStateFlow<String?>(null)
+    val backupStatus: StateFlow<String?> = _backupStatus.asStateFlow()
+
+    private val _showAutoRestorePrompt = MutableStateFlow(false)
+    val showAutoRestorePrompt: StateFlow<Boolean> = _showAutoRestorePrompt.asStateFlow()
+
     fun setOnboardingShown(shown: Boolean) {
         settingsManager.setOnboardingShown(shown)
         _onboardingShown.value = shown
@@ -147,6 +153,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             migrateFromSharedPreferencesIfNeeded()
             
+            // Verifichiamo se l'app non è configurata e se esiste il file di backup automatico
+            val currentProfiles = db.profileDao().getAllProfilesSnapshot()
+            val isNotConfigured = currentProfiles.isEmpty() && !settingsManager.isConfigured()
+            
+            var hasBackup = false
+            if (isNotConfigured) {
+                val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                val backupFile = java.io.File(downloadDir, "RichFarmaci_Backup.json")
+                if (backupFile.exists()) {
+                    hasBackup = true
+                    _showAutoRestorePrompt.value = true
+                }
+            }
+
             // Se l'app è già configurata, segniamo l'onboarding come già visto
             if (settingsManager.isConfigured()) {
                 settingsManager.setOnboardingShown(true)
@@ -154,10 +174,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             // Select first profile on startup
-            val currentProfiles = db.profileDao().getAllProfilesSnapshot()
-            if (currentProfiles.isNotEmpty()) {
-                selectProfile(currentProfiles.first().id)
-            } else {
+            val profilesSnapshot = db.profileDao().getAllProfilesSnapshot()
+            if (profilesSnapshot.isNotEmpty()) {
+                selectProfile(profilesSnapshot.first().id)
+            } else if (!hasBackup) {
+                // Mostra impostazioni solo se non ci sono profili E non c'è un backup pendente
                 _showSettings.value = true
             }
             
@@ -588,14 +609,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         footerParts.add("Nome Paziente: ${currentProfile.pazienteNome}")
         footerParts.add("Codice Fiscale: ${currentProfile.pazienteCf.uppercase()}")
 
-        if (currentProfile.secondoIndirizzo.isNotBlank()) {
-            footerParts.add("Ulteriori note: ${currentProfile.secondoIndirizzo}")
-        }
-
-        if (currentProfile.tipoInvio == 2 && currentProfile.medicoEmail.isNotBlank()) {
-            footerParts.add("Inviato via Email a: ${currentProfile.medicoEmail}")
-        }
-
         sections.add(footerParts.joinToString("\n"))
 
         // 4. Frase di coda
@@ -665,6 +678,91 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteHistoryItem(request: SentRequest) {
         viewModelScope.launch {
             sentRequestRepository.delete(request)
+        }
+    }
+
+    fun exportBackup(context: Context) {
+        viewModelScope.launch {
+            _backupStatus.value = "Esportazione in corso..."
+            val result = com.example.util.BackupManager.exportToDownload(context)
+            if (result.isSuccess) {
+                _backupStatus.value = "Backup salvato in Download:\n${result.getOrNull()}"
+                _donationCount.value = settingsManager.getDonationCount()
+            } else {
+                _backupStatus.value = "Errore durante l'esportazione: ${result.exceptionOrNull()?.message}"
+            }
+        }
+    }
+
+    fun importBackup(context: Context) {
+        viewModelScope.launch {
+            _backupStatus.value = "Importazione in corso..."
+            val result = com.example.util.BackupManager.importFromDownload(context)
+            if (result.isSuccess) {
+                // Aggiorniamo l'ID profilo attivo dai nuovi dati importati
+                val newActiveId = settingsManager.getActiveProfileId()
+                if (newActiveId != null) {
+                    _activeProfileId.value = newActiveId
+                    refreshActiveProfile()
+                }
+                
+                _onboardingShown.value = settingsManager.isOnboardingShown()
+                _disclaimerAccepted.value = settingsManager.isDisclaimerAccepted()
+                _donationCount.value = settingsManager.getDonationCount()
+                
+                updateConfigStatus()
+                
+                // Successo: Chiudiamo le impostazioni per "proseguire" verso la main screen
+                _showSettings.value = false
+                _backupStatus.value = "RIPRISTINO_OK" // Segnale speciale per la UI per chiudere il dialogo
+            } else {
+                _backupStatus.value = "Errore durante il ripristino: ${result.exceptionOrNull()?.message}"
+            }
+        }
+    }
+
+    fun clearBackupStatus() {
+        _backupStatus.value = null
+    }
+
+    fun dismissAutoRestorePrompt() {
+        _showAutoRestorePrompt.value = false
+        // Se l'utente rifiuta il backup su una nuova installazione, deve configurare manualmente
+        if (_activeProfile.value == null) {
+            _showSettings.value = true
+        }
+    }
+
+    fun confirmAutoRestore(context: Context) {
+        viewModelScope.launch {
+            // Blocchiamo subito ogni altra schermata
+            _showSettings.value = false 
+            _showAutoRestorePrompt.value = false
+            _backupStatus.value = "Importazione automatica in corso..."
+            
+            val result = com.example.util.BackupManager.importFromDownload(context)
+            if (result.isSuccess) {
+                // Ricarichiamo le impostazioni dal file appena scritto
+                _onboardingShown.value = settingsManager.isOnboardingShown()
+                _disclaimerAccepted.value = settingsManager.isDisclaimerAccepted()
+                _donationCount.value = settingsManager.getDonationCount()
+                
+                val newActiveId = settingsManager.getActiveProfileId()
+                if (newActiveId != null) {
+                    _activeProfileId.value = newActiveId
+                    refreshActiveProfile()
+                }
+                
+                updateConfigStatus()
+                // Garantiamo che showSettings resti false e inviamo il segnale di chiusura immediata alla UI
+                _showSettings.value = false
+                _backupStatus.value = "RIPRISTINO_OK"
+            } else {
+                _backupStatus.value = "Errore durante il ripristino automatico: ${result.exceptionOrNull()?.message}"
+                if (_activeProfile.value == null) {
+                    _showSettings.value = true
+                }
+            }
         }
     }
 }

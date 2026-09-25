@@ -1,9 +1,10 @@
 package com.example
 
-import android.Manifest
-import android.content.pm.PackageManager
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,6 +16,9 @@ import com.example.ui.screens.MainScreen
 import com.example.ui.theme.RichFarmaciTheme
 import com.example.ui.viewmodel.MainViewModel
 import com.example.ui.viewmodel.MainViewModelFactory
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Environment
 
 class MainActivity : ComponentActivity() {
 
@@ -32,6 +36,7 @@ class MainActivity : ComponentActivity() {
         // Chiedi i permessi solo se il disclaimer è già stato accettato in passato
         if (settingsManager.isDisclaimerAccepted()) {
             askNotificationPermission()
+            askStoragePermission()
         }
 
         setContent {
@@ -41,8 +46,35 @@ class MainActivity : ComponentActivity() {
                 )
                 MainScreen(
                     viewModel = viewModel,
-                    onDisclaimerAccepted = { askNotificationPermission() }
+                    onDisclaimerAccepted = { 
+                        askNotificationPermission()
+                        askStoragePermission()
+                    }
                 )
+            }
+        }
+    }
+
+    private fun askStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                try {
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                    intent.addCategory("android.intent.category.DEFAULT")
+                    intent.data = Uri.parse("package:${applicationContext.packageName}")
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    val intent = Intent()
+                    intent.action = Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
+                    startActivity(intent)
+                }
+            }
+        } else {
+            // Per versioni precedenti ad Android 11
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             }
         }
     }

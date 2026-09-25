@@ -31,6 +31,9 @@ In alto è presente un tasto **"?"** che consente di accedere a una guida in lin
 
 Poiché l'applicazione viene distribuita direttamente (non tramite il Play Store), la procedura cambia leggermente a seconda di come hai ricevuto il file. Scegli il tuo caso:
 
+> ⚠️ **ATTENZIONE - NOTA FONDAMENTALE SUI PERMESSI DI STORAGE:**
+> Al primo avvio (subito dopo l'accettazione del Disclaimer iniziale), per consentire il rilevamento automatico del backup o il salvataggio dei dati, il sistema Android aprirà una schermata speciale richiedendo di attivare l'opzione **"Consenti l'accesso a tutti i file"** per l'applicazione RichFarmaci. **È obbligatorio attivare questa opzione**, altrimenti l'applicazione non potrà né leggere né scrivere file all'interno della cartella Download!
+
 ### Caso A: Ricezione tramite WhatsApp (Consigliato per: Prima installazione)
 1. Apri la chat di WhatsApp dove hai ricevuto il file `RichFarmaci.apk`.
 2. Clicca sull'icona del file (o sul nome).
@@ -115,6 +118,17 @@ Se la funzione **"Attiva Notifiche"** in Configurazione è attiva, è possibile:
 In un secondo momento è possibile mettere in **"Pausa"** eventuali farmaci momentaneamente sospesi per escluderli dall'elenco delle richieste.
 
 **NOTA:** L'inserimento di una voce "Farmaco" con numero di scatole a zero e notifiche attive permette di NON far apparire la voce nell'elenco degli ordini, mantenendo però attivo l'invio di notifiche particolari (es. *"Ricordami di passare in farmacia per..."*).
+
+### 1.6 Backup e Ripristino Dati (Menu Segreto)
+L'applicazione include un sistema nascosto per mettere in sicurezza tutti i tuoi dati o per trasferirli su un nuovo telefono.
+*   **Come accedere:** Nella barra in alto, tieni premuto il dito per due secondi sull'icona dell'ingranaggio (**Impostazioni**). Si aprirà una finestra speciale.
+*   **Esportazione:** Cliccando su **ESPORTA**, tutti i profili, i farmaci, la cronologia delle richieste e le preferenze verranno salvati in un singolo file chiamato `RichFarmaci_Backup.json` all'interno della cartella pubblica **Download** del tuo telefono. Puoi copiare questo file su un computer o inviarlo su un nuovo dispositivo.
+
+> ⚠️ **ATTENZIONE - NOTA FONDAMENTALE SUI PERMESSI DI STORAGE:**
+> Al primo avvio (subito dopo l'accettazione del Disclaimer iniziale), per consentire il rilevamento automatico del backup o il salvataggio dei dati, il sistema Android aprirà una schermata speciale richiedendo di attivare l'opzione **"Consenti l'accesso a tutti i file"** per l'applicazione RichFarmaci. **È obbligatorio attivare questa opzione**, altrimenti l'applicazione non potrà né leggere né scrivere file all'interno della cartella Download!
+
+*   **Ripristino Manuale:** Cliccando su **RIPRISTINA**, l'applicazione leggerà il file `RichFarmaci_Backup.json` dalla cartella **Download** e caricherà tutti i dati precedentemente salvati (sovrascrivendo quelli attuali).
+*   **Ripristino Automatico alla Prima Installazione:** Se installi l'applicazione su un nuovo telefono (o dopo averla disinstallata) e sposti preventivamente il file `RichFarmaci_Backup.json` nella cartella **Download**, al primissimo avvio l'applicazione rileverà automaticamente il backup e ti chiederà se desideri ripristinare i tuoi dati, permettendoti di saltare completamente la configurazione iniziale obbligatoria.
 
 ---
 
